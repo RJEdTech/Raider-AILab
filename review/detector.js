@@ -27,9 +27,13 @@ detector:{
    steps:['d·a = 0.90 × 0.01 = 0.0090.','f·(1 − a) = 0.01 × 0.99 = 0.0099.','PPV = 0.0090 ÷ 0.0189 ≈ 0.476. Less than half of flags are real when AI writing is rare.'],
    lab:{set:{ai:1,fpr:1,det:90,essays:4,nn:false,reveal:true},look:'Read <b>Chance a flagged essay is really AI</b>.'},verify:[['ppv',47.62,0.05]]},
   {id:'next',kind:'real',lvl:'bio',
-   q:'A friend’s essay gets flagged by an AI detector, and they wrote it themselves. Based on this tool, what is the most reasonable next step?',
-   choices:['Accept the flag: detectors are 99% accurate','Ask to talk it through and show drafts and notes, since a flag is a reason for a conversation, not a verdict','Rewrite the essay with fancier words'],correct:1,
-   steps:['Even a 1% false positive rate flags dozens of honest students in a big school.','For some writers, most flags are false.','So a flag should start a conversation, backed by evidence like drafts and notes, not end one.']}
+   q:'A friend’s essay gets flagged by an AI detector, and they wrote it themselves. Which statement do this tool’s default numbers support?',
+   choices:['A flag proves the essay was AI-written','About 1 flag in 6 lands on an essay the student wrote','Detectors never flag human writing'],correct:1,
+   steps:['Real catches: 306. False flags: about 65.','65 ÷ 371 ≈ 17.4%, about 1 flag in 6.','For non-native writers in this model, about 4 flags in 5 are false. What happens next is up to each school’s policy; drafts and notes show how a piece of writing came together.']},
+  {id:'perplexity',kind:'real',lvl:'honors',
+   q:'In the Stanford study, why did detectors flag non-native speakers’ essays so often?',
+   choices:['Those students used AI more','Detectors key on low perplexity, and simpler, more predictable wording scores low','The essays were longer'],correct:1,
+   steps:['Perplexity measures how surprising each next word is to a language model.','Writers with a smaller English vocabulary often choose common, predictable words, which scores as low perplexity.','Low perplexity is the same signal detectors use for AI text, so their human writing looks machine-like to the detector.']}
  ]
 }
 });

@@ -7,6 +7,6 @@ nextword:{
   'Chatbot replies: they often appear a few words at a time because the model really does write one token at a time, each one predicted from your prompt plus everything it has written so far.',
   'Temperature is a real setting: tools for building apps on language models let developers set it, lower for steady, repeatable answers and higher for brainstorming. It is one reason the same question can get a different answer each time.'
  ],
- takeaway:'A language model predicts the next token from what came before, using patterns in its training text, then repeats. On its own it does not check whether a sentence is true, so fluent is not the same as correct. Check the facts that matter.'
+ takeaway:'A language model predicts the next token from counts like count(the, eggs) ÷ count(the) = 6 ÷ 12 = 50%, learned from its training text, then repeats. Nothing in that division checks whether a sentence is true, so likely text and true text are different things.'
 }
 });

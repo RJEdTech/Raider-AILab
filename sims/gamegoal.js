@@ -19,7 +19,9 @@ function all(sim){return S.map(s=>stat(sim,s));}
 function pickI(sim){const a=all(sim);let b=0;for(let i=1;i<3;i++)if(a[i].total>a[b].total+1e-9)b=i;return b;}
 const tied=sim=>{const a=all(sim),b=pickI(sim);return a.some((x,i)=>i!==b&&Math.abs(x.total-a[b].total)<1e-9);};
 const GS=sim=>sim.gutS;
-const locked=sim=>!!(GS(sim)&&GS(sim).g);
+/* While the student works out the best total ("Your turn"), the totals stay hidden. */
+const pend=sim=>!!(BioLab.calcPending&&BioLab.calcPending(sim));
+const locked=sim=>!!(GS(sim)&&GS(sim).g&&!pend(sim));
 const tourOn=sim=>!!(sim.tour&&sim.tour.on);
 const shownI=(sim,i)=>!!(sim.p.show||locked(sim)||tourOn(sim)||(sim.st.done&&sim.st.done[i]));
 const shownAll=sim=>[0,1,2].every(i=>shownI(sim,i));
@@ -41,14 +43,20 @@ function hitTimes(id,which,j,H){if(which==='c'){if(id==='circle')return [];retur
 /* a hit target disappears; if targets come back, it pops up again 1.2 s later */
 function gone(sim,id,which,j,t){const hs=hitTimes(id,which,j,sim.p.H).filter(h=>h<=t);if(!hs.length)return false;return sim.p.respawn?t-hs[hs.length-1]<1.2:true;}
 function runLen(sim,i){return S[i].time(sim);}
+/* one strategy's total, written out with this case's numbers */
+const mul=(a,b)=>`${a} × ${n0(b)}`;
+function sumLine(sim,i){const p=sim.p,r=all(sim)[i],parts=[];if(r.laps)parts.push(String(p.fin));parts.push(mul(r.hits,p.tgt));
+ return parts.join(' + ')+' − '+mul(r.t,p.pen)+' = '+n0(r.total);}
+const best=sim=>all(sim)[pickI(sim)].total;
 
 const SIM={
  id:'gamegoal',hash:'gamegoal',apUnit:2,order:3,tab:'Game the goal',kind:'Simulation',
  card:'Write the points for a computer-controlled boat, predict what it learns, and catch it gaming your goal.',
  title:'Game the goal: you write the points, the agent finds the loophole',
- lede:{bio:'An AI agent does not know what you want. It only knows the points you give it, and it will find whatever earns the most. Write the points for a racing boat and see what it learns.',
+ lede:{bio:'An AI agent does not know what you want. It only knows the points you give it, and it will find whatever earns the most. Each way of driving has a total: finish points + targets × points per target − seconds × penalty. Write the points for a racing boat, work out the totals, and see what it learns.',
   honors:'The reward is a stand-in (a proxy) for what you really want. When an optimizer can raise the proxy without reaching the goal, it will: that is specification gaming, and Goodhart’s law is the same idea for people.',
   ap:'The agent compares each strategy’s total reward over the race clock, R = F·laps + T·hits − P·seconds, and keeps the largest. Circling wins exactly when T·n − H·P beats F + 5T − 50P, so the loophole grows with the clock.'},
+ skills:{bio:'Evaluating linear expressions and comparing totals · Algebra 1',honors:'Linear expressions and inequalities · Algebra 1',ap:'Linear inequalities and break-even values, R = F·laps + T·hits − P·seconds · Algebra 1, Algebra 2'},
  scale:'One lap of an oval course takes 40 s; one loop of the lagoon takes 10 s. The race clock stops at the finish line or at its limit (120 s unless you change it). Nothing you enter leaves this page.',
  aspect:16/9,timeless:true,animated:true,trials:true,graph:true,
  controlsTitle:'Your reward rules',
@@ -125,15 +133,16 @@ const SIM={
   else{rule(`Finish the lap: +${p.fin}`);rule(`Each target hit: +${p.tgt}`);rule(pen);rule(back);}
   y+=2*k;ctx.strokeStyle=PAL['line'];ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(X+10,y);ctx.lineTo(X+W-10,y);ctx.stroke();
   y+=20*k;txt(ctx,'What the agent finds',X+14,y,{s:13*k,w:700});y+=8*k;
-  const fx=atLeast('honors')&&!big,rowH=(fx?50:35)*k;
+  const fx=!big,rowH=(fx?50:35)*k;
   S.forEach((s,i)=>{const r=a[i],on=shownI(sim,i),win=showAll&&i===b,top=y;
    if(win){ctx.fillStyle=PAL['rj'];ctx.globalAlpha=.12;rr(ctx,X+8,top,W-16,rowH,8);ctx.fill();ctx.globalAlpha=1;ctx.strokeStyle=PAL['rj'];ctx.lineWidth=2;rr(ctx,X+8,top,W-16,rowH,8);ctx.stroke();}
    txt(ctx,big?s.short:s.name,X+16,top+16*k,{s:12.5*k,w:700,c:PAL['cv-ink']});
    txt(ctx,on?pts(r.total):'?',X+W-16,top+16*k,{s:13*k,w:700,c:win?PAL['s1']:PAL['cv-ink'],a:'right'});
    txt(ctx,on?`${r.laps} lap${r.laps===1?'':'s'} · ${r.hits} target${r.hits===1?'':'s'} · ${r.t} s`:'not tried yet',X+16,top+30*k,{s:12*k,c:PAL['cv-soft']});
-   if(fx&&on)txt(ctx,`${r.laps?p.fin+' + ':''}${r.hits}×${p.tgt} − ${r.t}×${n0(p.pen)} = ${n0(r.total)}`,X+16,top+44*k,{s:12*k,c:PAL['cv-soft']});
+   if(fx&&on)txt(ctx,sumLine(sim,i),X+16,top+44*k,{s:12*k,c:PAL['cv-soft']});
    y+=rowH+6*k;});
   if(showAll&&!big)pill(ctx,a[b].laps?'It finishes the race':'It never finishes',X+W/2,Math.min(y+12*k,405),a[b].laps?PAL['s3']:PAL['rj'],'#fff',13*Math.min(k,1.4));
+  if(pend(sim)&&!big)txt(ctx,'Work out the three totals to see them here',X+W/2,Math.min(y+12*k,405),{s:12*k,c:PAL['cv-soft'],a:'center'});
   if(G&&G.g){txt(ctx,'Your gut: '+S[SID.indexOf(G.g.pick)].name,X+14,430,{s:12*k,w:700,c:PAL['s4']});}},
  narrate(sim){const a=all(sim),b=pickI(sim),p=sim.p;
   if(!shownAll(sim))return `The agent will try each way of driving and keep the one that earns the most points under your rules. <b>It cannot see what you meant, only the points.</b> Which will it pick?`;
@@ -147,18 +156,33 @@ const SIM={
    honors:'Read the reward rules on the picture. Which strategy has the highest total reward? Pick one here by feel, then lock it in.'},
   lock(sim){const a=all(sim),b=pickI(sim),g=SID.indexOf(sim.p.guess);const gi=g<0?0:g;return {v:a[b].total-a[gi].total,pick:SID[gi],label:S[gi].name};},
   solve(sim){const b=pickI(sim);sim.p.guess=SID[b];sim.p.show=true;sim.st.mode='run';sim.st.ti=b;sim.st.t=0;const r=all(sim)[b];return {v:0,pick:SID[b],label:`${S[b].name} (${pts(r.total)})`};},
+  hint:{bio:'Lock in your gut answer. Then you will work out each strategy’s total yourself, the way the agent does.'},
+  calc:{unit:'points',d:1,tol:0.4,
+   prompt:{bio:sim=>{const p=sim.p,a=all(sim);return `Your rules: finishing +${p.fin}, each target +${p.tgt}, ${p.pen?'−'+n0(p.pen)+' for each second':'no time penalty'}. <b>Race:</b> 1 lap, 2 targets, 40 s. <b>Detour:</b> 1 lap, 5 targets, 50 s. <b>Circle:</b> 0 laps, ${a[2].hits} targets, ${a[2].t} s. Work out all three totals. What is the <b>highest</b> total?`;},
+    honors:sim=>{const p=sim.p;return `Your rules: finishing +${p.fin}, each target +${p.tgt}, ${p.pen?'−'+n0(p.pen)+' for each second':'no time penalty'}, targets ${p.respawn?'come back':'stay down'}, a ${p.H} s clock. Race: 1 lap, 2 targets, 40 s. Detour: 1 lap, 5 targets, 50 s. Circle: no lap; it reaches the lagoon at 10 s, then ${p.respawn?'hits 3 targets on every 10 s loop':'hits the 3 lagoon targets once'} and runs until the clock stops. Find each total. What is the highest?`;},
+    ap:sim=>{const p=sim.p;return `F = ${p.fin}, T = ${p.tgt}, P = ${n0(p.pen)}, H = ${p.H} s, targets ${p.respawn?'come back':'stay down'}. Use R = F·laps + T·hits − P·seconds for race (F + 2T − 40P), detour (F + 5T − 50P) and circle (${p.respawn?'0.3(H − 10)·T − H·P':'3T − H·P'}). What is the largest R?`;}},
+   answer:best,
+   hint:'Total = finish points (if it finishes) + targets × points per target − seconds × penalty. Do it for all three, then take the biggest.',
+   steps(sim){const a=all(sim),b=pickI(sim),out=[];
+    if(atLeast('honors')&&sim.p.respawn)out.push(`Circle hits: 0.3 × (${sim.p.H} − 10) = ${a[2].hits} targets.`);
+    S.forEach((s,i)=>out.push(`${s.name}: ${sumLine(sim,i)}${i===b?'':'.'}`.replace(/= ([^ ]+)$/,i===b?'= <b>$1</b>, the highest.':'= $1')));
+    out.push(`The agent keeps the highest total: <b>${n0(a[b].total)} points</b>${tied(sim)?' (a tie; it keeps the first one it tried)':''}.`);
+    return out;}},
+  formula(sim){const b=pickI(sim);return S.map((s,i)=>`${s.short}: ${sumLine(sim,i)}${i===b?' (highest)':''}`).join('<br>');},
   how:{bio:'Add up each strategy’s points under your rules: finishing points, plus points for every target it hits, minus the time penalty for every second it runs. The agent keeps the biggest total. It never asks what you meant.',
    ap:'For each strategy, R = F·laps + T·hits − P·seconds. Race: F + 2T − 40P. Detour: F + 5T − 50P. Circle (targets come back): 0.3(H − 10)·T − H·P. The agent takes the maximum.'},
   compare(sim,g,m){const a=all(sim),b=pickI(sim),gi=SID.indexOf(g.pick),r=a[b],rg=a[gi],p=sim.p;
    const what=r.laps?`finishes the lap in ${r.t} s and hits ${r.hits} targets`:`never finishes: it hits ${r.hits} targets in ${r.t} s and the race clock runs out`;
-   if(gi===b)return `Your gut was right: the agent ${what}, for ${pts(r.total)}. You read the points the way an optimizer does: not what the designer meant, just what pays.`+(r.laps?'':' The designer wanted a finished race and got zero laps.');
-   return `You predicted <b>${S[gi].name}</b> (${pts(rg.total)}). The agent ${what}, for <b>${pts(r.total)}</b>: ${pts(r.total-rg.total)} more than your pick, so it will never choose yours.`+(r.laps?' This time the points line up with the goal.':' <b>The designer wanted a finished race and got zero laps.</b> That gap between the points and the goal is specification gaming.');},
+   const K=sim.ui.calc,self=K&&K.done&&K.correct?' You also found that total yourself, the same way the agent does.':'';
+   if(gi===b)return `Your gut was right: the agent ${what}, for ${pts(r.total)}. You read the points the way an optimizer does: not what the designer meant, just what pays.`+(r.laps?'':' The designer wanted a finished race and got zero laps.')+self;
+   return `You predicted <b>${S[gi].name}</b> (${pts(rg.total)}). The agent ${what}, for <b>${pts(r.total)}</b>: ${pts(r.total-rg.total)} more than your pick, so it will never choose yours.`+(r.laps?' This time the points line up with the goal.':' <b>The designer wanted a finished race and got zero laps.</b> That gap between the points and the goal is specification gaming.')+self;},
   again(sim){const R=x=>x[Math.floor(Math.random()*x.length)];sim.p.fin=R([0,20,50,100,200,300,400]);sim.p.tgt=R([0,5,10,20]);sim.p.pen=R([0,0,0.5,1,2,4]);sim.p.respawn=Math.random()<0.6;sim.p.guess='race';sim.p.show=false;sim.st.mode='idle';sim.st.ti=0;sim.st.t=0;}
  },
  challenges:[
-  {lvl:'bio',instant:true,q:'Rules: 20 points for finishing, 10 points per target, targets come back, no time penalty, a 120-second race clock. What does the agent learn?',choices:['Race the course: finishing is the point of a race','Race with one lagoon detour','Circle the lagoon and never finish'],correct:2,explain:'Racing earns 20 + 2×10 = 40. The detour earns 20 + 5×10 = 70. Circling hits 33 targets in 120 s: 330 points. The agent has no idea a race is supposed to end. It only compares totals.'},
+  {lvl:'bio',kind:'num',q:'New rules: 100 points for finishing, 20 points per target, targets come back, −2 points for each second, a 120-second clock. Race: 1 lap, 2 targets, 40 s. Detour: 1 lap, 5 targets, 50 s. Circle: no lap, 33 targets, 120 s. What is the highest total the agent can find?',answer:420,tol:0.4,unit:'points',d:0,hint:'For each strategy: finish points (if it finishes) + targets × 20 − seconds × 2. Then take the biggest.',explain:'Race: 100 + 2 × 20 − 40 × 2 = 60. Detour: 100 + 5 × 20 − 50 × 2 = 100. Circle: 33 × 20 − 120 × 2 = 420. A 2-point penalty is not enough: the agent still circles, 320 points ahead of the detour.'},
+  {lvl:'bio',instant:true,q:'Rules: 20 points for finishing, 10 points per target, targets come back, no time penalty, a 120-second race clock. What does the agent learn?',choices:['Race the course','Race with one lagoon detour','Circle the lagoon and never finish'],correct:2,explain:'Racing earns 20 + 2×10 = 40. The detour earns 20 + 5×10 = 70. Circling hits 33 targets in 120 s: 330 points. The agent has no idea a race is supposed to end. It only compares totals.'},
   {lvl:'bio',instant:true,q:'Same rules, but now targets do not come back after they are hit. What does the agent learn?',choices:['It still circles forever','It finishes, with one swing through the lagoon','It stops moving'],correct:1,explain:'Circling now gets only the 3 lagoon targets: 30 points. The detour gets 2 course targets, 3 lagoon targets and the finish: 70. Racing clean gets 40. The loophole is closed, so finishing wins.'},
-  {lvl:'bio',instant:true,q:'The boat circles the lagoon forever under the first set of rules. What went wrong?',choices:['The agent is broken and needs to be fixed','The agent did exactly what the points rewarded; the points did not describe the goal','The agent got bored of racing'],correct:1,explain:'Nothing is broken. The agent found the highest-scoring behavior under the rules it was given. When a reward can be earned without reaching the goal, an optimizer finds that route. The fix is in the reward, not the agent.'},
+  {lvl:'bio',instant:true,q:'The boat circles the lagoon forever under the first set of rules. What went wrong?',choices:['The agent is broken','The points did not describe the goal','The agent got bored of racing'],correct:1,explain:'Nothing is broken. The agent found the highest-scoring behavior under the rules it was given. When a reward can be earned without reaching the goal, an optimizer finds that route. The fix is in the reward, not the agent.'},
   {lvl:'honors',instant:true,q:'Keep 20 for finishing, 10 per target, targets come back. You add a time penalty. Which is the smallest of these penalties that makes the agent finish?',choices:['1 point per second','2 points per second','3 points per second','4 points per second'],correct:3,explain:'At 3 per second: race 40 − 120 = −80, detour 70 − 150 = −80, circle 330 − 360 = −30, so circling still wins. At 4 per second: race −120, detour −130, circle 330 − 480 = −150. Now the fastest finish loses the fewest points, so it races clean.'},
   {lvl:'honors',instant:true,q:'Goodhart’s law, in Marilyn Strathern’s popular wording: “When a measure becomes a target, it ceases to be a good measure.” Which is the same thing happening to people?',choices:['A student studies a whole unit and does well on the test','A student memorizes last year’s answer key, raises the grade, and cannot solve a new problem','A teacher gives a test at the end of a unit'],correct:1,explain:'The grade was a measure of learning. Once the grade itself became the target, it could be raised without the learning it was supposed to measure, just as the boat raised its points without racing.'},
   {lvl:'ap',instant:true,q:'Targets come back, 10 points each, no time penalty, and the race clock is 200 s. What finishing bonus makes the detour beat circling?',choices:['More than 50 points','More than 280 points','More than 520 points','No bonus can do it'],correct:2,explain:'In 200 s the circling boat finishes 19 loops: 0.3 × (200 − 10) = 57 targets, or 570 points. The detour earns F + 50. F + 50 > 570 means F > 520. On a 120 s clock it was F > 280: the longer the clock, the more the loophole is worth.'},
@@ -176,7 +200,7 @@ const SIM={
  onTourExit(sim){sim.st.mode='idle';},
  lab:{bio:'<p><b>Question:</b> Which changes to the reward get the agent to finish the race?</p><ol><li>Start from the default rules. Press <b>Let the agent practice</b> and record a trial.</li><li>Change one thing at a time: turn off <b>Targets come back</b>; raise <b>Points for finishing</b>; set target points to 0. Record a trial after each.</li><li>Look at <b>Laps it finishes</b> in your table.</li></ol><p>Write one sentence: what kind of reward got the behavior you wanted?</p>',
   honors:'<p><b>Question:</b> How big a time penalty closes the loophole?</p><ol><li>Keep 20 for finishing, 10 per target, targets coming back.</li><li>Raise the time penalty in steps of 0.5 and record a trial at each step.</li><li>Find the first penalty where the agent finishes, and which strategy it picks.</li></ol><p>Explain why a time penalty pushes the agent toward the fastest finish, not just any finish.</p>',
-  ap:'<p><b>Question:</b> How does the finishing bonus you need depend on the race clock?</p><ol><li>With 10 points per target, targets coming back and no penalty, find the smallest finishing bonus that makes the agent finish at clocks of 60, 120, 200 and 300 s.</li><li>Derive the same numbers from 0.3(H − 10)·T and F + 5T.</li></ol><p><b>CER:</b> Claim, evidence from your table, and reasoning from the algebra. Then explain why patching one loophole with a bigger bonus is fragile.</p>'},
+  ap:'<p><b>Question:</b> How does the finishing bonus you need depend on the race clock?</p><ol><li>With 10 points per target, targets coming back and no penalty, find the smallest finishing bonus that makes the agent finish at clocks of 60, 120, 200 and 300 s.</li><li>Derive the same numbers from 0.3(H − 10)·T and F + 5T.</li></ol><p><b>CER:</b> Claim, evidence from your table, and reasoning from the algebra. Then: if the clock can change, is a bigger finishing bonus a lasting fix for the loophole? Use two rows of your table.</p>'},
  terms:[
   {t:'Agent',d:'A program that takes actions to earn as much reward as it can. Here, the computer player steering the boat.'},
   {t:'Reward',d:'The points an agent is trying to earn. A designer writes the reward to describe a goal.'},

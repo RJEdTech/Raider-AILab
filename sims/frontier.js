@@ -30,7 +30,13 @@ const res=(sim,id,sort)=>outcome(sim,planUse(sim,id,sort));
 const wrongOf=sort=>filled(sort).reduce((a,s,i)=>a+(s!==TRUTH[i]?1:0),0);
 const locked=sim=>!!(sim.gutS&&sim.gutS.g);
 const tourOn=sim=>!!(sim.tour&&sim.tour.on);
-const shown=sim=>!!(sim.p.show||locked(sim)||tourOn(sim)||sim.st.reveal);
+/* while the student works out the time saved ("Your turn"), the picture and readouts stay hidden */
+const pend=sim=>!!(BioLab.calcPending&&BioLab.calcPending(sim));
+const shown=sim=>!!(sim.p.show||tourOn(sim)||sim.st.reveal||(locked(sim)&&!pend(sim)));
+const INMIN=T.reduce((a,x)=>a+(x.side==='in'?x.min:0),0),OUTMIN=ALONE-INMIN;
+const metrOn=sim=>!!(sim.p.metr&&atLeast('ap'));
+const calcAns=sim=>res(sim,'smart').saved;
+const x1=v=>(Math.round(v*10)/10).toFixed(1);
 const r1=v=>(Math.round(v*10)/10).toFixed(1).replace(/\.0$/,''),r0=v=>String(Math.round(v)),r2=v=>(Math.round(v*100)/100).toString();
 const sgnPct=v=>(v>=0?'':'−')+r1(Math.abs(v))+'%';
 function wrap(ctx,s,maxW,size,w){ctx.font=(w||400)+' '+size+'px '+FONT;const out=[];let line='';s.split(' ').forEach(wd=>{const t=line?line+' '+wd:wd;if(ctx.measureText(t).width>maxW&&line){out.push(line);line=wd;}else line=t;});if(line)out.push(line);return out;}
@@ -43,9 +49,10 @@ const rowY=(i,k)=>BOARD_T+i*((500-BOARD_T-6)/N);
 
 const SIM={
  id:'frontier',hash:'frontier',apUnit:3,order:1,tab:'The jagged frontier',kind:'Learning tool',
+ skills:{bio:'Percent of a part as a percent of the whole, and expected value · Algebra 1 (percents), Statistics (expected value)',ap:'Weighted sums over tasks and expected value · Algebra 1 (percents), Statistics (expected value)'},
  card:'Sort ten school tasks by whether AI does them well, then see what the studies found and what a wrong guess costs.',
  title:'The jagged frontier: which tasks should you hand to AI?',
- lede:{bio:'AI is great at some tasks and bad at others that look just as easy. Researchers call the line between them a jagged frontier. Sort your week’s tasks, then see what using AI well, or trusting it on everything, does to your time and your mistakes.',
+ lede:{bio:'AI does some tasks well and others badly, even when they look just as easy. Researchers call the line between them a jagged frontier. Sort your week’s tasks, then do the math: a percent saved on part of your week is a smaller percent of all of it, and expected right answers = tasks × chance of being right.',
   honors:'In a 2023 field experiment with 758 consultants, AI made people faster and better on tasks inside the frontier and more likely to be wrong on a task outside it. Who gained most, and how much a wrong sort costs, are both in the numbers.',
   ap:'The expected outcome of a plan is a sum over tasks: time × (1 − 0.251) and quality × 1.40 where AI is used inside the frontier, and a 19-point drop in the chance of being right where it is trusted outside. A feeling of speed is not a measurement: METR’s 2025 developers felt 20% faster and were 19% slower.'},
  scale:'Ten tasks a student might have in one week, about 242 minutes of work done alone. The minutes per task are estimates for illustration. Your sort and your guesses stay on this page; nothing is sent anywhere.',
@@ -73,6 +80,7 @@ const SIM={
   {id:'outRight',label:'Outside tasks done right, with your sort',unit:'of 4',d:2,min:0,max:4,lvl:'honors',get:sim=>shown(sim)?res(sim,'yours').right:null},
   {id:'quality',label:'Quality on inside tasks (alone = 100)',unit:'',d:1,min:0,max:150,lvl:'honors',get:sim=>shown(sim)?res(sim,'yours').qual:null},
   {id:'smartSave',label:'Time saved using AI only where it fits',unit:'%',d:1,max:null,lvl:'ap',get:sim=>shown(sim)?res(sim,'smart').saved:null},
+  {id:'who',label:'Quality gain inside the frontier (consultant study)',text:true,get:()=>'Still learning (bottom half): +43%. Already strong (top half): +17%.'},
   {id:'feel',label:'Feeling vs. measurement (METR 2025)',text:true,lvl:'ap',get:()=>'Expected: 24% faster. Believed afterward: about 20% faster. Measured: 19% slower.'}
  ],
  draw(sim,ctx,vdt,k){/* keep the answer buttons' label naming the current task, so the prompt sits next to the buttons */
@@ -80,6 +88,7 @@ const SIM={
   ctx.fillStyle=PAL['cv-bg'];ctx.fillRect(0,0,800,500);if(sim.p.view==='team')drawTeam(sim,ctx,k);else drawSort(sim,ctx,k);},
  onClick(sim,x,y){if(sim.p.view==='team'||y<BOARD_T-8)return;const i=clamp(Math.floor((y-BOARD_T+4)/((500-BOARD_T-6)/N)),0,N-1);sim.st.cur=i;sim.st.sort[i]=x<400?'in':'out';syncUI(sim);},
  narrate(sim){const st=sim.st,un=st.sort.filter(s=>!s).length;
+  if(pend(sim))return `Your sort is locked. <b>Before the answers appear,</b> work out how much of your week AI saves when you use it only on the inside tasks.`;
   if(!shown(sim))return un===N?`Start with task 1. Does today’s AI do it well (inside the frontier) or not (outside)? <b>The line is jagged:</b> tasks that feel equally easy can land on different sides.`:`${N-un} of 10 sorted. <b>Ask of each task:</b> can I check the answer, and does it depend on facts only I, or only the real world, can supply?`;
   const y=res(sim,'yours'),s=res(sim,'smart'),t=res(sim,'trust');
   if(sim.p.view==='team')return `Using AI only where it fits saves <b>${r0(ALONE-s.mins)} of ${ALONE} minutes</b> with no extra wrong answers. Trusting it on all ten saves ${r0(ALONE-t.mins)} minutes, but you expect <b>${r2(s.right-t.right)} more outside tasks wrong</b>: ${r2(t.right)} right out of 4 instead of ${r2(s.right)}.`;
@@ -90,8 +99,19 @@ const SIM={
    honors:'Sort all ten tasks with the buttons here (or by clicking the cards), and set your guess for how much time AI saves you. Then lock it in.'},
   lock(sim){const s=filled(sim.st.sort),un=sim.st.sort.filter(x=>!x).length,ni=s.filter(x=>x==='in').length;
    return {v:wrongOf(sim.st.sort),sort:s.slice(),speed:sim.p.speed,label:`${ni} inside, ${N-ni} outside${un?` (${un} unsorted, counted as inside)`:''}; AI saves you ${sim.p.speed}%`};},
-  solve(sim){const g=sim.gutS&&sim.gutS.g&&sim.gutS.g.sort;if(g)sim.st.sort=g.slice();sim.st.reveal=true;sim.p.show=true;sim.p.view='sort';const sv=res(sim,'smart').saved;sim.p.speed=Math.round(sv);
+  solve(sim){const g=sim.gutS&&sim.gutS.g&&sim.gutS.g.sort;if(g)sim.st.sort=g.slice();sim.st.reveal=true;sim.p.show=true;sim.p.view='team';const sv=res(sim,'smart').saved;sim.p.speed=Math.round(sv);
    return {v:0,label:`${NIN} inside, ${NOUT} outside; AI saves about ${r1(sv)}% when used only inside`};},
+  hint:{bio:'Lock in your sort and your time guess. Then you will work out the real time saved yourself.'},
+  calc:{unit:'%',d:1,tol:0.2,
+   prompt:{bio:sim=>metrOn(sim)?`A careful user hands AI the six inside tasks. Alone, those take <b>${INMIN}</b> of your <b>${ALONE}</b> minutes. Using METR’s result, they take <b>19% more time</b> with AI; the other ${OUTMIN} minutes stay the same. What percent of your whole week does AI “save”? (A loss is negative.)`:`A careful user hands AI the six inside tasks. Alone, those take <b>${INMIN}</b> of your <b>${ALONE}</b> minutes. With AI they take <b>25.1% less time</b>; the other ${OUTMIN} minutes stay the same. What percent of your whole week does AI save?`},
+   answer:calcAns,
+   hint:'Find the minutes saved on the inside tasks first. Then divide by all 242 minutes, not by 135.',
+   steps(sim){const m=metrOn(sim),d=INMIN*(1-tf(sim));
+    return m?[`Minutes added on the inside tasks: ${INMIN} × 0.19 = ${x1(-d)} minutes.`,`Share of the whole week: ${x1(-d)} ÷ ${ALONE} = ${(-d/ALONE).toFixed(3)}, so <b>${sgnPct(calcAns(sim))}</b>: a loss.`,`The outside tasks (${OUTMIN} minutes) do not change.`]
+     :[`Minutes saved on the inside tasks: ${INMIN} × 0.251 = ${x1(d)} minutes.`,`Share of the whole week: ${x1(d)} ÷ ${ALONE} = ${(d/ALONE).toFixed(3)}, so <b>${x1(calcAns(sim))}%</b>.`,`The 25.1% applies only to the ${INMIN} inside minutes, so the saving on all ${ALONE} minutes is smaller.`];}},
+  formula(sim){const d=INMIN*(1-tf(sim)),p=p0(sim),pp=r2(p),pq=r2(p-DROP);
+   const t=metrOn(sim)?`${INMIN} min × 0.19 = ${x1(-d)} min added; ${x1(-d)} ÷ ${ALONE} = ${x1(-calcAns(sim))}% of your week lost`:`${INMIN} min × 0.251 = ${x1(d)} min saved; ${x1(d)} ÷ ${ALONE} = ${x1(calcAns(sim))}% of your week`;
+   return `${t}<br>Outside tasks: 4 × ${pp} = ${r2(4*p)} expected right on your own; trusting AI, 4 × (${pp} − 0.19) = 4 × ${pq} = ${r2(4*(p-DROP))}`;},
   how:{bio:'A careful user asks two things about each task: can I check the answer, and does it depend on facts only I or the real world can supply? Then the studies supply the numbers: inside the frontier, AI users finished 25.1% faster with over 40% higher quality; outside it, they were 19 points less likely to be right.',
    ap:'Plan outcome = Σ over tasks. Inside and using AI: time × 0.749, quality × 1.40. Outside and trusting AI: P(right) = p₀ − 0.19. Time saved = 1 − (minutes with the plan ÷ 242).'},
   compare(sim,g,m){const sort=g.sort,y=res(sim,'yours',sort),s=res(sim,'smart'),trusted=[],skipped=[];
@@ -100,35 +120,36 @@ const SIM={
    if(!trusted.length&&!skipped.length)h+=`<b>Your sort matches a careful user’s on all ten.</b> You already sense where the line is. `;
    else{if(trusted.length)h+=`You would trust AI on <b>${trusted.length} outside task${trusted.length>1?'s':''}</b> (${trusted.join(', ')}): expect about <b>${r2(trusted.length*DROP)} more of them wrong</b>, 19 points less likely right each. `;
     if(skipped.length)h+=`You would skip AI on ${skipped.length} inside task${skipped.length>1?'s':''}, giving up about <b>${r0(lost)} minutes</b> and the quality boost there. `;}
-   const gap=g.speed-s.saved;
-   h+=`Your time guess: ${g.speed}%. The model: about <b>${r1(s.saved)}%</b> (${r0(ALONE-s.mins)} of ${ALONE} minutes), because only the inside tasks speed up.`;
-   if(gap>=5)h+=` Your gut expected more than the model finds. That gap is common: in METR’s 2025 study, developers believed AI made them about 20% faster; measured, they were 19% slower. Time yourself.`;
-   else if(gap<=-5)h+=` Your gut expected less than the model finds. Either way, the only way to know your own number is to time yourself.`;
-   else h+=' Close: your sense of the speedup matches the model.';
+   const gap=g.speed-s.saved,K=sim.ui&&sim.ui.calc;
+   h+=`Your time guess: ${g.speed}%. The math: <b>${x1(s.saved)}%</b>, ${r0(ALONE-s.mins)} of ${ALONE} minutes, because only the ${INMIN} inside minutes speed up.`;
+   if(gap>=5)h+=` Your gut expected more than the math finds: the ${metrOn(sim)?'19% change':'25.1%'} applies to ${INMIN} of the ${ALONE} minutes, not all of them. In METR’s 2025 study, developers who believed AI made them about 20% faster measured 19% slower.`;
+   else if(gap<=-5)h+=` Your gut expected less than the math finds.`;
+   else h+=' Close: your sense of the speedup matches the math.';
+   if(K&&K.done&&K.correct)h+=' You also worked out the time saved yourself.';
    return h;},
   again(sim){sim.st.sort=T.map(()=>null);sim.st.cur=0;sim.st.reveal=false;sim.p.speed=0;sim.p.side=null;sim.p.show=false;sim.p.view='sort';sim.p.task='t0';}
  },
  challenges:[
+  {lvl:'bio',kind:'num',q:'Another student’s week: the tasks inside the frontier take 90 of their 180 minutes. With AI those 90 minutes shrink by 25.1%; the rest stay the same. What percent of the whole 180 minutes do they save?',answer:12.55,tol:0.2,unit:'%',d:2,hint:'Find the minutes saved on the inside tasks first, then divide by the whole 180 minutes.',explain:'90 × 0.251 = 22.59 minutes saved. 22.59 ÷ 180 = 0.1255, about 12.6%. Half the week is inside the frontier, so the saving is half of 25.1%.'},
+  {lvl:'bio',kind:'num',q:'You get each of 4 outside tasks right 80% of the time on your own. Trusting AI on an outside task lowers that chance by 19 percentage points. If you trust AI on all four, how many do you expect to get right?',answer:2.44,tol:0.02,unit:'tasks',d:2,hint:'Subtract 19 points from 80%, then multiply by 4 tasks.',explain:'80% − 19% = 61%. 4 × 0.61 = 2.44 expected right, against 4 × 0.80 = 3.2 on your own: about 0.76 more wrong.'},
   {lvl:'bio',instant:true,q:'Which of these tasks is outside the frontier, where trusting AI is risky?',choices:['Summarize an article you paste in','Find published sources with exact quotes and page numbers','Rewrite an email so it sounds polite'],correct:1,explain:'Chat tools can produce sources and quotes that look real but do not exist. Summarizing and rewriting text you supply are strengths. All three feel equally easy, which is what makes the frontier jagged.'},
-  {lvl:'bio',instant:true,q:'In the 2023 study of 758 consultants, what happened on the task outside AI’s frontier?',choices:['AI users did just as well','AI users were 19 percentage points less likely to get it right','AI refused to help'],correct:1,explain:'On that task, consultants using AI were 19 percentage points less likely to reach the correct answer than those without it. The AI gave answers that were easy to accept, so mistakes got through.'},
-  {lvl:'bio',instant:true,q:'In METR’s 2025 study, 16 experienced developers expected AI tools to make them 24% faster, and afterward believed they had been about 20% faster. What did the measurement show?',choices:['They were 24% faster','They were about 20% faster','They were 19% slower'],correct:2,explain:'Timed on 246 real tasks, they took 19% longer with AI tools. Their feeling of speed was wrong in direction, not just size. That is why you measure.'},
-  {lvl:'honors',instant:true,q:'Inside the frontier, which consultants gained more quality from AI?',choices:['The top half: they know how to use it','The bottom half: about 43%, against 17% for the top half','Both gained exactly the same'],correct:1,explain:'In the study, below-average performers improved about 43% and above-average performers about 17%. AI narrowed the gap on inside tasks, which is good news for someone still learning a skill, as long as the task really is inside.'},
-  {lvl:'honors',instant:true,q:'You have 4 outside tasks and get each right 80% of the time on your own. If you trust AI on all four, about how many do you expect to get right?',choices:['3.2: no change','About 2.4','About 0.8'],correct:1,explain:'Trusting AI lowers each chance by 19 points: 80% − 19% = 61%. Four tasks × 0.61 = 2.44 right, against 4 × 0.80 = 3.2 on your own. That is about 0.76 more wrong answers.'},
-  {lvl:'ap',instant:true,q:'Your six inside tasks take 135 minutes alone and your four outside tasks 107. You use AI only on the inside ones, at 25.1% less time. About what share of the 242 minutes do you save?',choices:['25.1%','About 14%','About 40%'],correct:1,explain:'135 × 0.251 = 33.9 minutes saved. 33.9 ÷ 242 ≈ 14.0%. The headline 25.1% applies only to the inside tasks, so the saving on your whole week is smaller.'},
-  {lvl:'ap',instant:true,q:'Why shouldn’t you conclude from METR’s study that AI always slows experienced people down?',choices:['Because the result was not measured','Because it was a small sample (16 developers) with early-2025 tools, on one kind of work','Because the developers were not experienced'],correct:1,explain:'METR itself notes the caveats: 16 developers, tools from early 2025, and experienced people working on projects they knew well. The lasting lesson is not “AI is slow” but “your feeling of speed can be wrong, so measure.”'}
+  {lvl:'honors',kind:'num',q:'Trust AI on all ten tasks, so every task takes 25.1% less time. The ten take 242 minutes alone. How many minutes does the week take now?',answer:181.26,tol:0.3,unit:'min',d:1,hint:'25.1% less time means 74.9% of the time.',explain:'242 × (1 − 0.251) = 242 × 0.749 = 181.3 minutes: about 61 minutes saved, against 33.9 for using AI only inside. The extra 27 minutes come from the 4 outside tasks, where expected right answers drop from 3.2 to 2.44.'},
+  {lvl:'honors',kind:'num',q:'This time you get each outside task right only 60% of the time on your own. If you trust AI on all 4 outside tasks, how many more do you expect to get wrong than on your own?',answer:0.76,tol:0.02,unit:'tasks',d:2,hint:'Find the expected right answers both ways, then subtract.',explain:'On your own: 4 × 0.60 = 2.4 right. Trusting AI: 4 × (0.60 − 0.19) = 1.64 right. 2.4 − 1.64 = 0.76 more wrong. In this model the cost is 4 × 0.19 = 0.76 whatever your starting chance, because each task drops by the same 19 points.'},
+  {lvl:'ap',kind:'num',q:'Use METR’s result instead: tasks done with AI take 19% longer. A careful user uses AI on the 135 inside minutes and does the other 107 alone. What percent of the 242 minutes do they save? (A loss is negative.)',answer:-10.6,tol:0.15,unit:'%',d:1,hint:'Minutes added = 135 × 0.19. Divide by 242 and make it negative.',explain:'135 × 0.19 = 25.65 minutes added. 25.65 ÷ 242 = 0.106, so the “saving” is −10.6%: a loss of about 26 minutes.'},
+  {lvl:'ap',kind:'num',q:'Inside tasks take 25.1% less time with AI. What share of your week (in %) has to be inside the frontier for AI to save 20% of the whole week?',answer:79.68,tol:0.3,unit:'%',d:1,hint:'Saved share of the week = inside share × 0.251.',explain:'Set inside share × 0.251 = 0.20. Inside share = 0.20 ÷ 0.251 = 0.797, about 79.7%. Even if every task were inside, the most you could save is 25.1%.'}
  ],
  tour:[
   {title:'Your week',text:'These are ten tasks a student might have in one week. The question for each: does today’s AI do it well (inside the frontier), or not (outside)?',pause:true,setup:sim=>{BioLab.setValues(sim,{view:'sort',show:false,metr:false,skill:'avg',p0:80});sim.st.sort=T.map(()=>null);sim.st.cur=0;},focus:[8,BOARD_T-28,784,392]},
   {title:'A jagged line',text:'Here is how a careful user would sort them. Summarizing an article is inside; finding sources with page numbers is outside. They feel equally easy. That is why researchers call the frontier jagged.',pause:true,setup:sim=>{sim.st.sort=TRUTH.slice();sim.st.cur=1;}},
-  {title:'Inside: faster and better',text:'In a 2023 study, 758 consultants did 18 tasks inside AI’s frontier. With GPT-4 they finished 12.2% more tasks, 25.1% faster, with over 40% higher quality.',pause:true,setup:sim=>{sim.st.cur=0;},focus:[8,BOARD_T-28,392,392]},
+  {title:'Inside: faster and better',text:'In a 2023 study of consultants, tasks inside the frontier went 25.1% faster with over 40% higher quality.',pause:true,setup:sim=>{sim.st.cur=0;},focus:[8,BOARD_T-28,392,392]},
   {title:'Outside: wrong, and convincing',text:'On a task outside the frontier, consultants using AI were 19 percentage points less likely to get it right. The answers looked fine, so the mistakes got through.',pause:true,setup:sim=>{sim.st.cur=6;},focus:[408,BOARD_T-28,384,392]},
-  {title:'Four plans for your week',text:'Alone: 242 minutes. AI only where it fits: about 208 minutes, same 3.2 of 4 outside tasks right. Trust AI on all ten: about 181 minutes, but only 2.44 right. Faster is not better if it is wrong.',pause:true,setup:sim=>{BioLab.setValues(sim,{view:'team'});}},
+  {title:'Four plans for your week',text:'Alone: 242 minutes. AI only where it fits: 135 × 0.749 + 107 = about 208 minutes, with 4 × 0.80 = 3.2 outside tasks right. Trust AI on all ten: 242 × 0.749 = about 181 minutes, with 4 × 0.61 = 2.44 right.',pause:true,setup:sim=>{BioLab.setValues(sim,{view:'team'});}},
   {lvl:'honors',title:'Who gains most',text:'Bottom-half performers gained about 43% in quality inside the frontier, top-half about 17%. Switch between them and watch the quality bars.',pause:true,setup:sim=>{BioLab.setValues(sim,{skill:'low'});}},
-  {title:'Measure, don’t trust the feeling',text:'In METR’s 2025 study, 16 experienced developers on 246 real tasks expected AI to make them 24% faster and afterward felt about 20% faster. Measured, they were 19% slower. Know which side of the line a task is on, and time yourself.',pause:true,setup:sim=>{BioLab.setValues(sim,{view:'team',skill:'avg'});if(atLeast('ap'))BioLab.setValues(sim,{metr:true});}}
+  {title:'Feeling vs. measurement',text:'In METR’s 2025 study, experienced developers felt about 20% faster with AI and measured 19% slower.',pause:true,setup:sim=>{BioLab.setValues(sim,{view:'team',skill:'avg'});if(atLeast('ap'))BioLab.setValues(sim,{metr:true});}}
  ],
  onTourExit(sim){BioLab.setValues(sim,{view:'sort',metr:false});},
- lab:{bio:'<p><b>Question:</b> Which mistakes cost more: trusting AI on an outside task, or skipping it on an inside task?</p><ol><li>Press <b>Sort like a careful user</b> and record a trial.</li><li>Move one outside task to Inside (click its card on the left). Record a trial.</li><li>Put it back, then move one inside task to Outside. Record a trial.</li></ol><p>Write one sentence: which kind of mistake would you rather make, and why?</p>',
-  honors:'<p><b>Question:</b> Who should lean on AI most?</p><ol><li>Sort like a careful user and switch to <b>Results of four plans</b>.</li><li>Record the inside quality for Typical, Still learning and Already strong.</li><li>Now set your own chance on outside tasks to 60% and to 90%, and record how many you get right under “Trust AI on all.”</li></ol><p>Explain what this means for a student who is still learning a skill.</p>',
+ lab:{bio:'<p><b>Question:</b> Which mistakes cost more: trusting AI on an outside task, or skipping it on an inside task?</p><ol><li>Press <b>Sort like a careful user</b> and record a trial.</li><li>Move one outside task to Inside (click its card on the left). Record a trial.</li><li>Put it back, then move one inside task to Outside. Record a trial.</li></ol><p>Who gains most from AI inside the frontier, and who loses most from trusting it outside? Use two numbers from your trials or the readouts.</p>',
+  honors:'<p><b>Question:</b> Who should lean on AI most?</p><ol><li>Sort like a careful user and switch to <b>Results of four plans</b>.</li><li>Record the inside quality for Typical, Still learning and Already strong.</li><li>Now set your own chance on outside tasks to 60% and to 90%, and record how many you get right under “Trust AI on all.”</li></ol><p>Compare the quality gain and the outside-task cost for a student still learning and one already strong. Use numbers from your table.</p>',
   ap:'<p><b>Question:</b> When does the feeling of speed mislead?</p><ol><li>Record the time saved under “AI where it fits” with the consultant numbers.</li><li>Turn on METR’s result and record it again.</li><li>Write the expected minutes for a plan as a sum over tasks, and show where the 19% slowdown enters.</li></ol><p><b>CER:</b> Design a one-week experiment to measure your own speedup with AI on two of these tasks. What would you time, and how would you keep the comparison fair?</p>'},
  terms:[
   {t:'Jagged frontier',d:'The uneven boundary between tasks AI does well and tasks it does badly. Tasks that seem equally hard can land on different sides.'},
@@ -163,6 +184,8 @@ function drawSort(sim,ctx,k){const st=sim.st,show=shown(sim),big=k>1.3,cur=st.cu
 /* four plans, three measures */
 function drawTeam(sim,ctx,k){const big=k>1.3,R=PLANS.map(p=>res(sim,p.id)),show=shown(sim);
  txt(ctx,'Four ways to do the same ten tasks',14,24*k,{s:13.5*k,w:700});
+ const fl=metrOn(sim)?`AI where it fits: ${INMIN} × 0.19 = ${r1(INMIN*0.19)} min added`:`AI where it fits: ${INMIN} × 0.251 = ${r1(INMIN*FAST)} min saved = ${x1(calcAns(sim))}% of ${ALONE}`;
+ if(show&&!big)txt(ctx,fl,786,24*k,{s:12*k,w:700,c:PAL['s3'],a:'right'});
  /* legend */
  let lx=14,ly=24*k+22*k;PLANS.forEach(p=>{ctx.font='700 '+(12*k)+'px '+FONT;const w=ctx.measureText(p.name).width+30*k;if(lx+w>790){lx=14;ly+=20*k;}ctx.fillStyle=PAL[p.col];ctx.fillRect(lx,ly-10*k,14*k,12*k);txt(ctx,p.name,lx+19*k,ly,{s:12*k,w:700,c:PAL['cv-ink']});lx+=w+8;});
  const top=ly+20*k,bot=470,panels=[{t:'Minutes',sub:'lower is better',max:300,v:R.map(r=>r.mins),f:r0},{t:'Inside quality',sub:'alone = 100',max:150,v:R.map(r=>r.qual),f:r0},{t:'Outside right',sub:'of 4 tasks',max:4,v:R.map(r=>r.right),f:r2}];
@@ -171,6 +194,6 @@ function drawTeam(sim,ctx,k){const big=k>1.3,R=PLANS.map(p=>res(sim,p.id)),show=
   const by=bot,bw=(pw-40)/4;ctx.strokeStyle=PAL['line'];ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x0+12,by);ctx.lineTo(x0+pw-12,by);ctx.stroke();
   P.v.forEach((v,i)=>{const h=(show||PLANS[i].id!=='yours')?v/P.max*(ph-24*k):0,bx=x0+20+i*bw;ctx.fillStyle=PAL[PLANS[i].col];ctx.fillRect(bx+3,by-h,bw-6,h);
    txt(ctx,(show||PLANS[i].id!=='yours')?P.f(v):'?',bx+bw/2,by-h-6,{s:12*k,w:700,a:'center',c:PAL['cv-ink']});});});
- txt(ctx,(sim.p.metr&&atLeast('ap'))?'Speed: METR 2025 (19% slower with AI). Quality and mistakes: consultant study.':'Effect sizes: consultant study, 2023. Minutes per task are estimates.',14,494,{s:12*k,c:PAL['cv-soft']});}
+ txt(ctx,show&&big?fl:(sim.p.metr&&atLeast('ap'))?'Speed: METR 2025 (19% slower with AI). Quality and mistakes: consultant study.':'Effect sizes: consultant study, 2023. Minutes per task are estimates.',14,494,{s:12*k,c:show&&big?PAL['s3']:PAL['cv-soft'],w:show&&big?700:400});}
 BioLab.register(SIM);
 })();

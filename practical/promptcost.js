@@ -7,6 +7,6 @@ promptcost:{
   'AI headlines: when you read “one prompt uses X,” ask what was counted (serving only or a full life cycle), whether it is a median or an average, and who measured it. Google, OpenAI’s CEO and Mistral each reported something different.',
   'APES and the national grid: the same unit math (Wh to kWh to TWh) sets the big picture. US data centers used about 4.4% of US electricity in 2023, and Lawrence Berkeley National Lab projects 6.7% to 12% by 2028.'
  ],
- takeaway:'One prompt is small: about 50 make a phone charge by Google’s count. The issue is the growth in totals, and every per-prompt number depends on what was counted.'
+ takeaway:'One prompt is small: 12 ÷ 0.24 = 50 make a phone charge by Google’s count. The totals are what grow, and every per-prompt number depends on what was counted. Which number would you put in a headline, and what would you say it counts?'
 }
 });

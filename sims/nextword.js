@@ -41,7 +41,13 @@ const cueCount=(sim,w)=>{const {tab}=cueRows(sim);return tab[low(w)]||0;};
 const topOpt=sim=>{const o=PASS[sim.p.passage].opts;let bi=0;o.forEach((w,i)=>{if(cueCount(sim,w)>cueCount(sim,o[bi]))bi=i;});return bi;};
 const TOUR=sim=>!!(sim.tour&&sim.tour.on);
 const GS=sim=>sim.gutS&&sim.gutS.g?sim.gutS:null;
-const shown=sim=>!!(sim.p.show||GS(sim)||sim.st.toks.length>2||TOUR(sim));
+/* while the student works out their word's share ("Your turn"), the counts stay hidden */
+const pend=sim=>!!(BioLab.calcPending&&BioLab.calcPending(sim));
+const shown=sim=>!!(sim.p.show||(GS(sim)&&!pend(sim))||sim.st.toks.length>2||TOUR(sim));
+/* the student's pick (the locked one if there is one) and its share of the words after "the" */
+const myW=sim=>{const g=sim.gutS&&sim.gutS.g;return g&&g.w?g.w:PASS[sim.p.passage].opts[+sim.p.guess]||PASS[sim.p.passage].opts[0];};
+const shareOf=(sim,w)=>{const {tot}=cueRows(sim);return tot?100*cueCount(sim,w)/tot:0;};
+const pr1=v=>(Math.round(v*10)/10).toString()+'%';
 function sample(sim){const d=cur(sim);let u=sim.st.r(),i=0;for(;i<d.rows.length-1;i++){u-=d.rows[i].p;if(u<=0)break;}return d.rows[i].w;}
 function write(sim,n){for(let i=0;i<n&&sim.st.toks.length<MAXT;i++)sim.st.toks.push(sample(sim));sim.infoDirty=true;}
 function startOver(sim,seed){sim.st.toks=['.',CUE];sim.st.r=rng(seed||sim.st.seed||7);sim.infoDirty=true;}
@@ -69,9 +75,10 @@ function genWords(sim){const t=sim.st.toks,m=M(sim),out=[];let cap=true;
 
 const SIM={
  id:'nextword',hash:'nextword',apUnit:1,order:1,tab:'Next Word',kind:'Simulation',
+ skills:{bio:'Conditional relative frequency: count(the, next word) ÷ count(the) · Statistics (two-way tables and conditional probability)',ap:'Conditional probability, softmax with temperature, and entropy · AP Statistics, Precalculus (exponents and logarithms)'},
  card:'Build a tiny language model from one short passage, guess the word it will write next, then watch it write with the temperature turned up or down.',
  title:'Next Word: build a tiny language model',
- lede:{bio:'A chatbot writes one word at a time. Each time, it asks one question: given what came before, which word is likely next? This tiny model answers by counting what follows what in one short passage.',
+ lede:{bio:'A chatbot writes one word at a time. Each time, it asks one question: given what came before, which word is likely next? This tiny model answers by counting: the chance of a word after “the” is the number of times it follows “the” divided by the number of times “the” appears.',
   honors:'This toy is an n-gram model. A bigram model looks at one word of context and a trigram model looks at two. Real chatbots use the same idea with far longer context and pieces of words called tokens.',
   ap:'The model turns counts into probabilities p_i, then reshapes them with a temperature T: P_i ∝ exp(log p_i / T). That is a softmax over log-probabilities, the same knob real language models expose.'},
  scale:'One short passage of about 45 words is the model’s entire training text. A large model like Meta’s Llama 3 trained on more than 15 trillion tokens.',
@@ -141,7 +148,7 @@ const SIM={
   sim._L={pass:[x1,y1,W1,h1],bars:[x2,y2,W2,h2]};
   const by0=y2+hh+(back?lh:0);
   if(!sh){txt(ctx,'?',x2+W2/2,by0+rh*1.7,{s:44*Math.min(k,1.3),w:700,c:PAL['cv-soft'],a:'center'});
-   txt(ctx,'Lock in your guess to see the counts.',x2+W2/2,by0+rh*2.9,{s:12*k,c:PAL['cv-soft'],a:'center'});}
+   txt(ctx,pend(sim)?'Count first: your word’s share.':'Lock in your guess to see the counts.',x2+W2/2,by0+rh*2.9,{s:12*k,c:PAL['cv-soft'],a:'center'});}
   else{const rows=d.rows.slice(0,nb),rest=d.rows.slice(nb).reduce((s,r)=>s+r.p,0);
    const items=rows.map(r=>({lab:nice(m,r.w),p:r.p,c:r.c,w:r.w,p0:r.p0}));items.push({lab:'all others',p:rest,c:null,w:null});
    ctx.font='700 '+fs+'px '+FONT;const pw=ctx.measureText(wide?'99.9% · 12/12':'99.9%').width+10;
@@ -172,6 +179,7 @@ const SIM={
    if(g.odd){ctx.strokeStyle=PAL['s1'];ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(p.x,oy3+p.y+3);ctx.lineTo(p.x+p.w,oy3+p.y+3);ctx.stroke();ctx.setLineDash([]);}});
   if(odd)txt(ctx,'Red: a word pair that never appears in the passage',x3+pad,oy3+fl3.h+fs*0.3,{s:12*k,c:PAL['s1'],w:700});},
  narrate(sim){const m=M(sim),d=cur(sim),t=sim.st.toks,T=sim.p.temp,top=d.rows[0],s=stats(sim);
+  if(pend(sim))return `Your guess is locked. <b>Now count:</b> every “the” in the passage is highlighted. How often is your word the one right after it?`;
   if(!shown(sim))return `The model has read only ${PASS[sim.p.passage].name}. It just wrote ${q(CUE)}. <b>Which word does it think comes next?</b> It decides by counting what followed ${q(CUE)} in the passage.`;
   const last=t[t.length-1]==='.'?'the end of a sentence':q(nice(m,t[t.length-1]));
   let tail='';if(T<=0.4)tail=` At temperature ${T.toFixed(1)} it almost always takes the favorite, <b>so the same phrases keep coming back</b>.`;
@@ -184,19 +192,31 @@ const SIM={
    honors:'Before you see any counts: which word most often follows “the” in this passage? Pick one here and lock it in.'},
   lock(sim){const i=+sim.p.guess,w=PASS[sim.p.passage].opts[i];return {v:cueCount(sim,w),i,w,label:q(w)};},
   solve(sim){const i=topOpt(sim),w=PASS[sim.p.passage].opts[i],{tot}=cueRows(sim);sim.p.guess=i;startOver(sim);const c=cueCount(sim,w);return {v:c,i,w,label:`${q(w)}, which follows “the” ${c} of ${tot} times`};},
+  hint:{bio:'Lock in your guess. Then you will count your word’s share yourself.'},
+  calc:{unit:'%',d:1,tol:1,
+   prompt:{bio:sim=>{const {tot}=cueRows(sim);return `In the passage, “the” appears <b>${tot}</b> times (highlighted). Count how many of them are followed right away by <b>${q(myW(sim))}</b>, your pick. What percent of the time does ${q(myW(sim))} come right after “the”? That share is the chance the model gives it at temperature 1.`;},
+    ap:sim=>`Find the maximum-likelihood estimate p(${myW(sim)} | the) = count(the, ${myW(sim)}) ÷ count(the) from the passage, as a percent.`},
+   answer:sim=>shareOf(sim,myW(sim)),
+   hint:'Look at the word right after each highlighted “the”. Count the matches, then divide by the number of “the”s.',
+   steps(sim){const w=myW(sim),{tot}=cueRows(sim),c=cueCount(sim,w);
+    return [`“the” appears ${tot} times with a word after it.`,`${q(w)} comes right after “the” ${c} time${c===1?'':'s'}.`,`${c} ÷ ${tot} = ${(c/tot).toFixed(3)}, so <b>${pr1(shareOf(sim,w))}</b>.`];}},
+  formula(sim){const m=PASS[sim.p.passage].opts[topOpt(sim)],{tot}=cueRows(sim),c=cueCount(sim,m),g=sim.gutS&&sim.gutS.g&&sim.gutS.g.w,line=`p(${m} | the) = count(the, ${m}) ÷ count(the) = ${c} ÷ ${tot} = ${pr1(100*c/tot)}`;
+   if(!g||low(g)===low(m))return line;const cg=cueCount(sim,g);return line+`<br>Your pick: p(${g} | the) = ${cg} ÷ ${tot} = ${pr1(100*cg/tot)}`;},
   how:{bio:'The math is counting. Find every “the” in the passage and look at the word right after it. The word that shows up there most often is the best bet, and its share of the count is its chance.',
    ap:'Maximum-likelihood bigram estimate: p(w | the) = count(the, w) / count(the). The best single prediction is the word with the largest count.'},
   compare(sim,g,m){const {tot}=cueRows(sim),diff=m.v-g.v,all=(M(sim).toks.filter(x=>x===low(g.w)).length);
    const tail=' That is the whole trick of a language model: count what follows what, then bet on it. A real chatbot makes the same kind of bet with a neural network that learned from trillions of words.';
-   if(diff<=0)return `Your gut was right on. If you predicted the word after every “the” in this passage, ${q(g.w)} would be right <b>${g.v} times out of ${tot}</b>, more than any other word. You just did what a language model does.`+tail;
-   return `If you predicted the word after every “the” in this passage, your pick ${q(g.w)} would be right <b>${g.v} time${g.v===1?'':'s'} out of ${tot}</b>. The count’s pick ${q(m.w)} would be right <b>${m.v} times out of ${tot}</b>: ${diff} more right guess${diff===1?'':'es'}.`+(g.v===0&&all>0?` ${q(g.w)} shows up ${all} time${all===1?'':'s'} in the passage, but never right after “the”: a common word is not the same as a common <i>next</i> word.`:'')+tail;},
+   const K=sim.ui&&sim.ui.calc,self=K&&K.done&&K.correct?' You also counted your word’s share yourself.':'';
+   if(diff<=0)return `Your gut was right on. If you predicted the word after every “the” in this passage, ${q(g.w)} would be right <b>${g.v} times out of ${tot}</b>, more than any other word. You just did what a language model does.`+tail+self;
+   return `If you predicted the word after every “the” in this passage, your pick ${q(g.w)} would be right <b>${g.v} time${g.v===1?'':'s'} out of ${tot}</b>. The count’s pick ${q(m.w)} would be right <b>${m.v} times out of ${tot}</b>: ${diff} more right guess${diff===1?'':'es'}.`+(g.v===0&&all>0?` ${q(g.w)} shows up ${all} time${all===1?'':'s'} in the passage, but never right after “the”: a common word is not the same as a common <i>next</i> word.`:'')+tail+self;},
   again(sim){const i=ORDER.indexOf(sim.p.passage);sim.p.passage=ORDER[(i+1)%ORDER.length];sim.p.guess=0;sim.p.show=false;startOver(sim);relabel(sim);}
  },
  challenges:[
-  {lvl:'bio',instant:true,q:'In the recipe, “the” is followed by “eggs” 6 times out of 12. At temperature 1, what chance does the model give “eggs” after “the”?',choices:['100%: it always picks the top word','About 50%: 6 out of 12','About 8%: 1 out of the 12 words it has seen there'],correct:1,explain:'At temperature 1 the chance is the count share: 6 ÷ 12 = 50%. So half the time it writes “eggs” and half the time something else, mostly “pan” (3 of 12, 25%). That is why the same prompt can give different text.'},
-  {lvl:'bio',instant:true,q:'You turn the temperature down to 0.1 and press Write 10 more words. What happens?',choices:['The writing gets more creative','It almost always takes the most likely word, so it falls into the same loop of phrases','It stops writing'],correct:1,explain:'At temperature 0.1, “eggs” (6 of 12) gets almost 100% after “the”, and “into” and “the” win their turns too, so the recipe model writes “the eggs into the eggs into the…”. Low temperature is safe and repetitive.'},
+  {lvl:'bio',kind:'num',q:'Game recap: “The Raiders won the game two to one. The other team scored first. Then the Raiders pressed hard and the keeper made a big save. In the second half the Raiders scored twice. The crowd cheered and the team celebrated the win.” “The” appears 10 times. What percent of the time does “Raiders” come right after it?',answer:30,tol:1,unit:'%',d:0,hint:'Count the “the Raiders” pairs (capital letters count too), then divide by 10.',explain:'“the Raiders” appears 3 times: “The Raiders won”, “the Raiders pressed” and “the Raiders scored”. 3 ÷ 10 = 30%. A model trained on this recap gives “Raiders” a 30% chance after “the”.'},
+  {lvl:'bio',instant:true,q:'In the recipe, “the” is followed by “eggs” 6 times out of 12. At temperature 1, what chance does the model give “eggs” after “the”?',choices:['100%','50%','25%','8%'],correct:1,explain:'At temperature 1 the chance is the count share: 6 ÷ 12 = 50%. So half the time it writes “eggs” and half the time something else, mostly “pan” (3 of 12, 25%). That is why the same prompt can give different text.'},
+  {lvl:'bio',instant:true,q:'You turn the temperature down to 0.1 and press Write 10 more words. What happens?',choices:['The writing gets more varied','It repeats the same phrases','It stops writing'],correct:1,explain:'At temperature 0.1, “eggs” (6 of 12) gets almost 100% after “the”, and “into” and “the” win their turns too, so the recipe model writes “the eggs into the eggs into the…”. Low temperature is safe and repetitive.'},
   {lvl:'bio',instant:true,q:'You turn the temperature up to 3. Why does the text turn into nonsense?',choices:['The model learns new words','Long shots get a real chance, including words that never came next in the passage','The passage gets shuffled'],correct:1,explain:'Temperature flattens the chances. After “the” in the recipe at temperature 3, words that never followed “the” share about 19% of the chance, up from 0.05% at temperature 1. Pick enough of those and the sentences fall apart.'},
-  {lvl:'honors',instant:true,q:'Switch from 1 word of context (bigram) to 2 words (trigram). What happens to the longest stretch the model copies word for word from the passage?',choices:['It gets longer: with two words of context, most pairs in a short passage have only one possible next word','It gets shorter','It stays the same'],correct:0,explain:'In the recipe, 38 of the 42 two-word pairs have only one word that ever follows them. So the trigram model mostly has one choice, and it ends up retracing the passage. More context makes text more sensible, but with too little training text it starts to memorize.'},
+  {lvl:'honors',instant:true,q:'Switch from 1 word of context (bigram) to 2 words (trigram). What happens to the longest stretch the model copies word for word from the passage?',choices:['It gets longer','It gets shorter','It stays the same'],correct:0,explain:'In the recipe, 38 of the 42 two-word pairs have only one word that ever follows them. So the trigram model mostly has one choice, and it ends up retracing the passage. More context makes text more sensible, but with too little training text it starts to memorize.'},
   {lvl:'honors',instant:true,q:'Why can a model trained only on the recipe never write the word “pizza”?',choices:['It knows pizza does not belong in this recipe','“pizza” never appears in its training text, so it has no token for it','The temperature is too low'],correct:1,explain:'This toy can only choose among the words it has read. Real models split text into subword tokens, so they can spell new words, but they still lean on patterns from their training data.'},
   {lvl:'ap',instant:true,q:'After some word, the counts give three words chances of 0.6, 0.3 and 0.1. At temperature T = 0.5, what does the top word’s chance become?',choices:['60%','67%','78%','90%'],correct:2,explain:'P_i ∝ exp(log p_i / 0.5) = p_i². So 0.36, 0.09 and 0.01, which sum to 0.46. The top word gets 0.36 ÷ 0.46 ≈ 78%.'},
   {lvl:'ap',instant:true,q:'As T grows without limit, what do the next-word chances approach?',choices:['All the chance goes to the most likely word','Every word in the vocabulary gets the same chance','They stay the same as at T = 1'],correct:1,explain:'log p_i / T → 0 for every word, so every exp(·) → 1 and the softmax becomes uniform over the vocabulary. As T → 0 the opposite happens: all the chance goes to the top word (greedy decoding).'}
