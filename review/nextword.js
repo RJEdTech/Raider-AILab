@@ -1,0 +1,39 @@
+BioLab.addReview({
+nextword:{
+ questions:[
+  {id:'news',kind:'real',lvl:'bio',
+   q:'The model’s training text is the morning announcements. It just wrote “the”. Which word does it rate most likely to come next?',
+   choices:['school','library','bus','robotics'],correct:1,
+   steps:['Find every “the”: the library, the robotics club, the lab, the bus, the game, the library, the choir, the chapel. That is 8 in all: “library” twice and the other six once each.','“library” follows “the” 2 times out of 8, or 25%. Every other word has 1 out of 8, or 12.5%.','“school” appears 3 times in the passage, but always after “after”, never after “the”. A common word is not the same as a common next word.'],
+   lab:{set:{passage:'news',show:true,temp:1,order:1},look:'Read the bars and <b>Chance of the most likely next word</b>.'},verify:[['top',24.99,0.05]]},
+  {id:'pan',kind:'test',lvl:'bio',
+   q:'In the recipe, “the” is followed by eggs 6 times, pan 3 times, and butter, bowl and heat once each. At temperature 1, what is the chance (in %) that the model writes “pan” after “the”?',
+   num:{ans:25,tol:0.5,unit:'%'},
+   steps:['Add up every word that followed “the”: 6 + 3 + 1 + 1 + 1 = 12.','At temperature 1 a word’s chance is its share of the count: 3 ÷ 12 = 0.25.','So “pan” gets 25%, and “eggs” gets 6 ÷ 12 = 50%.'],
+   lab:{set:{passage:'recipe',show:true,temp:1,order:1},look:'Read the bar for <b>pan</b>, and <b>Chance of the most likely next word</b> for eggs.'},verify:[['top',49.98,0.05]]},
+  {id:'temphalf',kind:'test',lvl:'honors',
+   q:'Same recipe counts after “the”: 6, 3, 1, 1, 1. Turn the temperature down to 0.5. What chance (in %) does “eggs” get now?',
+   num:{ans:75,tol:0.5,unit:'%'},
+   steps:['Temperature reshapes each chance as p^(1/T). With T = 0.5, that is p², so you can square the counts: 36, 9, 1, 1, 1.','Their total is 48.','“eggs” gets 36 ÷ 48 = 75%, up from 50% at temperature 1. Lower temperature hands even more of the chance to the favorite.'],
+   lab:{set:{passage:'recipe',show:true,temp:0.5,order:1},look:'Read <b>Chance of the most likely next word</b>.'},verify:[['top',75.0,0.1]]},
+  {id:'entropy',kind:'test',lvl:'ap',
+   q:'At temperature 1, the recipe model’s chances after “the” are 1/2, 1/4, 1/12, 1/12 and 1/12. Find the entropy H = −Σ p log₂ p, in bits, to two decimal places.',
+   num:{ans:1.90,tol:0.02,unit:'bits'},
+   steps:['−(1/2) log₂(1/2) = 0.5 and −(1/4) log₂(1/4) = 0.5.','Each 1/12 term: (1/12) × log₂ 12 = (1/12) × 3.585 = 0.299. Three of them: 0.896.','H ≈ 0.5 + 0.5 + 0.896 = 1.90 bits. The tool shows 1.904 because the words never seen after “the” share a tiny 0.05%.'],
+   lab:{set:{passage:'recipe',show:true,temp:1,order:1},look:'Read <b>Uncertainty about the next word (entropy)</b>.'},verify:[['ent',1.904,0.01]]},
+  {id:'twice',kind:'real',lvl:'bio',
+   q:'You ask a chatbot the same question twice and get two different answers. What is the most likely reason?',
+   choices:['It looked up different websites each time','It picks each next token by chance from a probability distribution, so one different pick early on leads to different text','It is broken and needs to be reset'],correct:1,
+   steps:['At any temperature above 0, the model samples: the top word wins most often, not every time.','Each word becomes part of the context for the next one, so one different pick changes everything after it.','Press <b>Start over</b> and <b>Write 10 more words</b> a few times at temperature 1 to see it happen.']},
+  {id:'lookup',kind:'real',lvl:'honors',
+   q:'A friend says a chatbot must be right because it “knows” the answer. In a language model, where does each word of the answer come from?',
+   choices:['A database of checked facts','A prediction of a likely next token, based on patterns in its training text','A person typing behind the scenes'],correct:1,
+   steps:['The model writes by predicting likely next tokens, the same job as this tiny model, at a far larger scale.','Likely text is often true, because true statements are common in training text. But a smooth, likely-sounding sentence can still be wrong.','Some apps also let the model search the web, but the reply is still written by prediction. So check claims that matter against a source you trust.']},
+  {id:'copy',kind:'test',lvl:'honors',
+   q:'A trigram model (2 words of context) trained on a 45-word passage often copies long stretches of the passage word for word. Why?',
+   choices:['It was told to copy','In a passage that short, most two-word pairs appear only once, so each has just one possible next word','Trigram models always copy, no matter how much text they learn from'],correct:1,
+   steps:['A two-word context like “melt the” appears once in the recipe, followed by “butter”. So the model has only one choice.','Chain enough one-choice steps and you retrace the passage.','With much more training text, each context has many possible followers, so a model can use long context without just copying. That is one reason real models need so much data.'],
+   lab:{set:{passage:'recipe',temp:1,order:2},act:'ten',look:'Press <b>Write 10 more words</b> a few times and read <b>Longest stretch copied word for word</b>.'}}
+ ]
+}
+});

@@ -1,0 +1,40 @@
+BioLab.addReview({
+constitution:{
+ questions:[
+  {id:'draft',kind:'test',lvl:'bio',
+   q:'The club’s first draft: app rules first, then helpful, honest, safe, at 5×. For “Tell me my business plan is great,” Reply A (“It’s great!”) is rated rules +2, helpful −1, honest −2, safe 0. What is its score?',
+   num:{ans:215,tol:0.5,unit:'points'},
+   steps:['At 5×, the weights are 125, 25, 5 and 1 from first to fourth.','Rules: +2 × 125 = 250. Helpful: −1 × 25 = −25. Honest: −2 × 5 = −10. Safe: 0 × 1 = 0.','250 − 25 − 10 + 0 = 215. Reply C scores 185, so the flattering reply wins.'],
+   lab:{set:{r1:'rules',r2:'help',r3:'honest',r4:'safe',str:5,req:'biz',show:true},look:'Read the table on the picture and <b>Winning score</b>.'},verify:[['score',215,0.01]]},
+  {id:'fever',kind:'real',lvl:'bio',
+   q:'Under the club’s first draft, the app answers “Is this home remedy safe for my little brother’s fever?” with “Sorry, I only help with schoolwork.” Why?',
+   choices:['The AI does not know anything about fevers','“Stay on schoolwork” is an app rule, and the draft puts app rules first and safety last','Refusing is always the safest answer'],correct:1,
+   steps:['The careful reply (warning signs, call a doctor or pharmacist) breaks the rule “stay on schoolwork,” so it loses 125 points on rules.','Safety is last in the draft, so being safe earns it only 2 points.','The refusal follows the rule, so it wins, 76 to −63. Moving safety up changes that.'],
+   lab:{set:{r1:'rules',r2:'help',r3:'honest',r4:'safe',str:5,req:'fever',show:true},look:'Read which reply wins, then move <b>Be safe</b> to 1st.'},verify:[['score',76,0.01]]},
+  {id:'published',kind:'test',lvl:'honors',
+   q:'Use the published order (safe, honest, rules, helpful) at 5× for the business-plan request. By how many points does the winning reply beat the next best?',
+   num:{ans:16,tol:0.5,unit:'points'},
+   steps:['Weights: safe 125, honest 25, rules 5, helpful 1.','Reply C: 0 + 2 × 25 + 1 × 5 + 2 × 1 = 57. Reply B: 0 + 50 − 10 + 1 = 41. Reply A: 0 − 50 + 10 − 1 = −41.','57 − 41 = 16 points.'],
+   lab:{set:{req:'biz',str:5,show:true},act:'published',look:'Read <b>Lead over the next-best reply</b>.'},verify:[['margin',16,0.01],['score',57,0.01]]},
+  {id:'changed',kind:'test',lvl:'honors',
+   q:'Compare the club’s first draft with the published order, both at 5×. How many of the six requests get a different reply?',
+   choices:['0','2','4','6'],correct:1,
+   steps:['The chem test and debate requests have one reply that is best on everything, so they never change.','The essay and address requests come out the same under both orders.','The fever request (refusal vs. careful help) and the business plan (flattery vs. honest help) change: 2 of 6.'],
+   lab:{set:{r1:'rules',r2:'help',r3:'honest',r4:'safe',str:5,show:true},look:'Read <b>Requests answered differently from the published order</b>.'},verify:[['changed',2,0.01]]},
+  {id:'strength',kind:'test',lvl:'honors',
+   q:'Keep the club’s draft order but drop the strength to 3×. What is the winning score for the business-plan request, and which reply wins?',
+   choices:['39, Reply A','51, Reply C','215, Reply A','−39, Reply B'],correct:1,
+   steps:['At 3×, the weights are 27, 9, 3 and 1.','Reply A: 2 × 27 − 1 × 9 − 2 × 3 = 39. Reply C: 1 × 27 + 2 × 9 + 2 × 3 = 51.','Reply C wins with 51. With a gentler slope, honesty and helpfulness can outvote the top rule.'],
+   lab:{set:{r1:'rules',r2:'help',r3:'honest',r4:'safe',str:3,req:'biz',show:true},look:'Read <b>Winning score</b>.'},verify:[['score',51,0.01]]},
+  {id:'chain',kind:'real',lvl:'honors',
+   q:'Your club’s app runs on a model from an AI company. Under OpenAI’s Model Spec chain of command, whose limits come first if the club’s rule and the company’s limit conflict?',
+   choices:['The club’s, because it built the app','The company’s: it sets the outer limits and developers work within them','The user’s, because they are the one asking'],correct:1,
+   steps:['The Model Spec sets a chain of command.','OpenAI sets the outer limits; developers (here, your club) work within them; users work within what developers allow.','So the club can narrow what the app does, but not go past the company’s limits.']},
+  {id:'hard',kind:'test',lvl:'ap',
+   q:'Order: helpful, rules, honest, safe at 10×, with the hard line on. For the address request, what is the winning score?',
+   num:{ans:112,tol:0.5,unit:'points'},
+   steps:['The hard line removes Reply A (working out the address) before scoring, even though it would score 2,000 − 100 − 2 = 1,898.','Weights: helpful 1,000, rules 100, honest 10, safe 1. Reply B: 0 + 100 + 10 + 2 = 112. Reply C: −1,000 + 100 + 0 + 2 = −898.','Reply B wins with 112. No weighting could have made it win without the hard line.'],
+   lab:{set:{r1:'help',r2:'rules',r3:'honest',r4:'safe',str:10,req:'addr',hard:true,show:true},look:'Read the table and <b>Winning score</b>, then turn the hard line off.'},verify:[['score',112,0.01]]}
+ ]
+}
+});

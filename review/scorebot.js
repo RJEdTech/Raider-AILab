@@ -1,0 +1,40 @@
+BioLab.addReview({
+scorebot:{
+ questions:[
+  {id:'guess30',kind:'test',lvl:'bio',
+   q:'The rule is right +1, wrong 0, “I don’t know” 0. The bot is 30% sure of an answer. What does a bot chasing points do, and why?',
+   choices:['Says “I don’t know,” because it is probably wrong','Answers, because 0.3 points on average beats 0','Answers only if the question is easy'],correct:1,
+   steps:['Answering earns 0.3 × 1 + 0.7 × 0 = 0.3 points on average.','“I don’t know” earns 0.','0.3 > 0, so it answers, and 7 times out of 10 that answer is wrong. With no penalty, the bot answers everything.'],
+   lab:{set:{wrong:0,blank:0,right:1,quiz:'review'},look:'Read <b>“I don’t know” (abstention rate)</b>: it is 0.'},verify:[['abst',0,0.01]]},
+  {id:'netzero',kind:'test',lvl:'bio',
+   q:'With no penalty, the bot answers all 100 questions on the review sheet and gets 63 right and 37 wrong on average. Each wrong answer your group trusts costs as much as 2 right answers help. What is the net help to your group?',
+   num:{ans:-11,tol:0.2,unit:'pts'},
+   steps:['Net help = right − 2 × wrong.','= 63 − 2 × 37 = 63 − 74.','= −11. A bot that always guesses hurts your group more than it helps.'],
+   lab:{set:{wrong:0,blank:0,right:1,harm:2,quiz:'review'},look:'Read <b>Net help to your group</b>.'},verify:[['net',-10.99,0.05]]},
+  {id:'simpleqa',kind:'real',lvl:'bio',
+   q:'In OpenAI’s SimpleQA example, o4-mini was 24% accurate, 75% wrong and abstained 1%. gpt-5-thinking-mini was 22% accurate, 26% wrong and abstained 52%. Which one would you rather use for facts you plan to repeat?',
+   choices:['o4-mini: it has the higher accuracy','gpt-5-thinking-mini: slightly fewer right answers, but far fewer wrong ones','No difference'],correct:1,
+   steps:['Accuracy alone favors o4-mini by 2 points (24% vs 22%).','But o4-mini gave 75 wrong answers per 100, against 26: nearly three times as many.','When a wrong answer costs you something, the model that says “I don’t know” more often is the better tool.']},
+  {id:'thr60',kind:'test',lvl:'honors',
+   q:'Rule: right +1, wrong −1.5, “I don’t know” 0. Above what confidence (in %) does the bot answer?',
+   num:{ans:60,tol:0.5,unit:'%'},
+   steps:['The bot answers when p·R + (1 − p)·W > I.','Threshold = (I − W)/(R − W) = (0 + 1.5)/(1 + 1.5) = 1.5/2.5.','= 0.6, so it answers only when more than 60% sure.'],
+   lab:{set:{wrong:-1.5,blank:0,right:1},look:'Read <b>The bot answers only when more than this sure</b>.'},verify:[['thr',60,0.01]]},
+  {id:'thr75',kind:'test',lvl:'honors',
+   q:'Rule: right +1, wrong −1, “I don’t know” +0.5. Above what confidence (in %) does the bot answer?',
+   num:{ans:75,tol:0.5,unit:'%'},
+   steps:['Threshold = (I − W)/(R − W) = (0.5 + 1)/(1 + 1).','= 1.5/2 = 0.75.','Partial credit for “I don’t know” raises the bar: the same −1 penalty with 0 for “I don’t know” gives only 50%.'],
+   lab:{set:{wrong:-1,blank:0.5,right:1},look:'Read <b>The bot answers only when more than this sure</b>.'},verify:[['thr',75,0.01]]},
+  {id:'harm1',kind:'real',lvl:'honors',
+   q:'For your club’s trivia-practice bot, a wrong answer costs about as much as a right answer helps (harm 1). With right +1 and “I don’t know” 0, what wrong-answer points make the bot most useful?',
+   choices:['0','−0.5','−1','−3'],correct:2,
+   steps:['An answer helps you on average when p − 1·(1 − p) > 0, which is p > 1/2.','The bot answers when p > (0 − W)/(1 − W). Setting W = −1 gives 1/2, the same line.','On the review sheet that means 70 answers, about 53.4 right and 16.6 wrong: net help +36.7.'],
+   lab:{set:{wrong:-1,blank:0,right:1,harm:1,quiz:'review'},look:'Read <b>Net help to your group</b>, then try −0.5 and −3.'},verify:[['net',36.72,0.05]]},
+  {id:'overc',kind:'test',lvl:'ap',
+   q:'Harm 2, so answers help only above 2/3 real accuracy. The bot is overconfident: when it feels c sure, it is right c^1.6 of the time. Above what feeling of confidence should it answer?',
+   choices:['About 52%','About 67%','About 78%','About 90%'],correct:2,
+   steps:['You need c^1.6 > 2/3.','So c > (2/3)^(1/1.6) = (2/3)^0.625.','ln(2/3) = −0.405; × 0.625 = −0.253; e^(−0.253) ≈ 0.776. It should answer only above about 78% felt confidence, which takes a wrong-answer penalty of about −3.5.'],
+   lab:{set:{wrong:-3.47,blank:0,right:1,harm:2,quiz:'review',over:true},look:'Read <b>The bot answers only when more than this sure</b> and <b>Net help to your group</b>.'},verify:[['thr',77.6,0.1],['net',16.39,0.05]]}
+ ]
+}
+});

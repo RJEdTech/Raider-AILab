@@ -1,0 +1,38 @@
+BioLab.addReview({
+frontier:{
+ questions:[
+  {id:'minutes',kind:'test',lvl:'bio',
+   q:'Your six inside tasks take 135 minutes alone and your four outside tasks 107 minutes. You use AI only on the inside tasks, which then take 25.1% less time. How many minutes does the whole week take?',
+   num:{ans:208.1,tol:0.2,unit:'min'},
+   steps:['Inside tasks with AI: 135 × (1 − 0.251) = 135 × 0.749 = 101.1 minutes.','Outside tasks, done yourself: 107 minutes.','Total: 101.1 + 107 = 208.1 minutes, against 242 alone. That saves 33.9 minutes, about 14%.'],
+   lab:{act:'careful',look:'Read <b>Minutes for all ten, with your sort</b>.'},verify:[['mins',208.115,0.01],['saved',14.0,0.05]]},
+  {id:'sources',kind:'real',lvl:'bio',
+   q:'An AI chat tool gives you three sources for your history paper, each with a quote and a page number. What should you do?',
+   choices:['Cite them as given: the page numbers make them look checked','Find each source yourself in a library database and confirm the quote before citing it','Ask the same chat tool whether the sources are real'],correct:1,
+   steps:['Finding exact sources and quotes is outside the frontier: chat tools can produce citations that look real but do not exist.','Asking the same tool to check itself does not add new evidence.','Checking each one in a library database turns a risky task into a safe one.']},
+  {id:'trust',kind:'test',lvl:'honors',
+   q:'You get each of your 4 outside tasks right 80% of the time on your own. If you trust AI on all of them, how many do you expect to get right?',
+   num:{ans:2.44,tol:0.01,unit:'tasks'},
+   steps:['Trusting AI outside the frontier lowers each chance by 19 percentage points: 80% − 19% = 61%.','Expected right = 4 × 0.61 = 2.44.','On your own: 4 × 0.80 = 3.2. Trusting AI costs about 0.76 correct answers out of 4.'],
+   lab:{set:{p0:80,show:true},act:'trustall',look:'Read <b>Outside tasks done right, with your sort</b>.'},verify:[['outRight',2.44,0.001]]},
+  {id:'skill',kind:'test',lvl:'honors',
+   q:'Sorting like a careful user, what quality score (alone = 100) does an already-strong student get on the inside tasks, using the top-half result?',
+   num:{ans:117,tol:0.5,unit:''},
+   steps:['Top-half performers in the consultant study gained about 17% in quality on inside tasks.','100 × 1.17 = 117.','A student still learning (bottom half, +43%) would reach 143: AI narrowed the gap.'],
+   lab:{set:{skill:'high'},act:'careful',look:'Read <b>Quality on inside tasks</b>, then switch to Still learning.'},verify:[['quality',117,0.01]]},
+  {id:'feeling',kind:'real',lvl:'honors',
+   q:'After a month with an AI study tool, you feel like you finish homework about 20% faster. What is the best next step?',
+   choices:['Trust the feeling: 20% is a big, clear effect','Time a few similar assignments with and without the tool, because a feeling of speed can be wrong','Stop using the tool, because the METR study showed AI makes people slower'],correct:1,
+   steps:['In METR’s 2025 study, experienced developers believed they were about 20% faster with AI, but measured, they were 19% slower.','That study was small and used early-2025 tools, so it does not prove AI always slows people down.','What it does show is that the feeling is not the measurement. Timing yourself answers the question for your own work.']},
+  {id:'metr',kind:'test',lvl:'ap',
+   q:'Use METR’s result instead: tasks done with AI take 19% longer. Sorting like a careful user (135 minutes inside, 107 outside), how long does the week take?',
+   num:{ans:267.7,tol:0.2,unit:'min'},
+   steps:['Inside tasks with AI: 135 × 1.19 = 160.65 minutes.','Outside tasks: 107 minutes.','Total: 267.65 ≈ 267.7 minutes, about 26 minutes more than the 242 alone. Which result applies depends on the person and the work, so measure.'],
+   lab:{set:{metr:true},act:'careful',look:'Read <b>Minutes for all ten, with your sort</b>.'},verify:[['mins',267.65,0.01]]},
+  {id:'cover',kind:'test',lvl:'bio',
+   q:'A cover letter takes you 40 minutes alone. Inside the frontier, the consultants finished 25.1% faster. About how long would it take with AI?',
+   choices:['About 15 minutes','About 30 minutes','About 39 minutes'],correct:1,
+   steps:['25.1% less time means 74.9% of the time.','40 × 0.749 = 29.96, about 30 minutes.','You still need time to make sure every claim in the letter is true about you.']}
+ ]
+}
+});
