@@ -14,3 +14,7 @@ Every figure in a tool links to its source (OpenAI, Anthropic, Google, IEA, LBNL
 
 ## Files
 `index.html`, `engine.js`, `biolab.css`, `courses.js`, `sims/*.js`, `practical/*.js`, `review/*.js`. Everything runs in the browser; no student data leaves the device.
+
+## License
+
+© 2026 Jason Beyer, RJ Ed Tech. Licensed under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/): free to share and adapt for non-commercial use with credit. See [LICENSE](LICENSE).
