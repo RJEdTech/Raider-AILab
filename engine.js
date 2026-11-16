@@ -81,6 +81,38 @@ BL.register=function(def){if(!def||!def.id)return;DEFS.push(def);};
 const PRACT={};BL.addPractical=o=>{Object.assign(PRACT,o||{});};
 /* Review layer (review.js): questions and AP exam links per tool. Merged into the tool definitions at start. */
 const REVIEWS={};BL.addReview=o=>{Object.assign(REVIEWS,o||{});};
+/* Math card layer (mathcards.js, Nov 16, 2026): per tool {f, v:[[symbol,meaning]], why, beh, solve:[...]}. Math type: `x` italic variable, ^{..} superscript, _{..} subscript.
+   Shows the model with every variable named, why this model fits, how the function behaves, and the model solved for each unknown. */
+const MATHC={};BL.addMath=o=>{Object.assign(MATHC,o||{});};
+const mfx=s=>String(s||'').replace(/`([^`]*)`/g,'<i>$1</i>').replace(/\^\{([^}]*)\}/g,'<sup>$1</sup>').replace(/_\{([^}]*)\}/g,'<sub>$1</sub>');BL.mfx=mfx;
+/* Typeset plain powers in displayed text (Nov 16, 2026): x^(t/h) and 2^bits become real superscripts. Runs on text nodes as they appear in a tool's section,
+   skipping code, inputs and spreadsheet cells, where ^ is literal syntax. */
+const SUPRE=/([^\s^(]|\))\^(\((?:[^()]|\([^()]*\))*\)|[\u2212-]?[A-Za-z0-9](?:[A-Za-z0-9.]*[A-Za-z0-9])?)/g;
+const supText=s=>s.replace(SUPRE,(m,b,e)=>b+'<sup>'+(e[0]==='('?e.slice(1,-1):e)+'</sup>');BL.supText=supText;
+const SUPSKIP='code,kbd,pre,samp,input,textarea,select,option,script,style,canvas,[class^=rjs],[class*=" rjs"],[data-nosup]';
+function supify(root){if(!root||!root.ownerDocument)return;const t=root.nodeType===3?[root]:[];if(root.nodeType===1){const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);while(w.nextNode())t.push(w.currentNode);}
+  t.forEach(n=>{const v=n.nodeValue;if(!v||v.indexOf('^')<0)return;const p=n.parentElement;if(!p||p.closest(SUPSKIP))return;const e=esc(v),h=supText(e);if(h===e)return;
+    const sp=document.createElement('span');sp.innerHTML=h;n.replaceWith(...sp.childNodes);});}
+const SUPOBS=typeof MutationObserver==='function'?new MutationObserver(ms=>ms.forEach(m=>{if(m.type==='characterData')supify(m.target);else m.addedNodes.forEach(n=>supify(n));})):null;
+function mathcardHTML(M){const T=x=>mfx(lvText(x));let h='<summary><b>The math:</b> <span class="mc-f">'+T(M.f)+'</span></summary><div class="mc-b">';
+  if(M.v&&M.v.length)h+='<ul class="mc-v">'+M.v.map(([a,b])=>'<li><span class="mc-s">'+mfx(a)+'</span> '+mfx(b)+'</li>').join('')+'</ul>';
+  if(M.why)h+='<p><b>Why this model:</b> '+T(M.why)+'</p>';if(M.beh)h+='<p><b>How it behaves:</b> '+T(M.beh)+'</p>';
+  const so=Array.isArray(M.solve)?M.solve:M.solve?lvText(M.solve):null;if(so&&so.length)h+='<p><b>Solved for each unknown:</b></p><ul class="mc-so">'+so.map(x=>'<li>'+mfx(x)+'</li>').join('')+'</ul>';return h+'</div>';}
+/* "Letters used" under a walkthrough step (Nov 16, 2026, from Tom Flynn: students met B and P without being told what they were).
+   Lists each card variable that the step's text uses as math: right next to an operator, a digit, a bracket or a sub/superscript. */
+const MOP='=()÷×·/+−\\-^<>≤≥|*0-9\u2080-\u2089\u2070-\u2079\u00b2\u00b3\u00b9\u207f\u1d57\u2071';
+function stepVars(M,html){if(!M||!M.v)return '';const t=String(html||'').replace(/<sup>/g,'^').replace(/<[^>]+>/g,'').replace(/&[a-z]+;/g,' ');const out=[];
+  M.v.forEach(([a,b])=>{const syms=(String(a).match(/`[^`]+`/g)||[]).map(x=>x.slice(1,-1)).filter(x=>/^[A-Za-zα-ωΔΣ]$/.test(x));
+    const caps=!syms.length&&/^[A-Z]{2,5}$/.test(a)?[a]:[];const all=syms.concat(caps);if(!all.length)return;
+    const hit=all.some(x=>{const e=x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');if(x.length>1)return new RegExp('(^|[^A-Za-z])'+e+'([^A-Za-z]|$)').test(t);
+      const re=new RegExp('(^|[^A-Za-z])'+e+'(?![a-z])','g');let m;while((m=re.exec(t))){const i=m.index+m[1].length,pre=t.slice(Math.max(0,i-2),i),post=t.slice(i+1,i+3);
+        const op=new RegExp('['+MOP+']');if(op.test(pre.slice(-1))||op.test(post[0]||'')||(/ /.test(pre.slice(-1))&&op.test(pre[0]||''))||(/ /.test(post[0]||'')&&op.test(post[1]||''))||/^[A-Z]/.test(post))return true;}return false;});
+    if(hit)out.push('<span>'+mfx(a)+' = '+mfx(b)+'</span>');});
+  return out.length?'<p class="tb-vars"><b>Letters used:</b> '+out.join(' · ')+'</p>':'';}
+function mathcardVis(sim){const c=sim.ui.mcard;if(!c)return;const G=sim.def.gut,S=sim.gutS,locked=!!(S&&S.g);
+  const hide=sim.mode==='game'||sim.mode==='vlab'||(sim.mode==='guided'&&G&&GUIDED_GUT&&!locked&&!(sim.guide&&sim.guide.revealed));if(c.hidden!==hide)c.hidden=hide;
+  if(sim._mcMode!==sim.mode){sim._mcMode=sim.mode;if(sim.mode!=='guided'&&!hide)c.open=true;}
+  if(locked&&!sim._mcAuto){sim._mcAuto=true;if(!hide)c.open=true;}else if(!locked&&sim._mcAuto){sim._mcAuto=false;}}
 const bioOver=(t,n)=>!n?t:(t&&typeof t==='object')?Object.assign({},t,{bio:n}):(t?{bio:n,honors:t}:n);
 function applyPractical(d){const P=PRACT[d.id];if(!P)return;d.practical=P;
   if(P.lede)d.lede=bioOver(d.lede,P.lede);if(P.card)d.card=P.card;
@@ -159,7 +191,7 @@ function buildSim(sim){
   <div class="related" hidden></div>
   <p class="fb-line"><a class="fb-link" href="${fbUrl(d.tab)}" target="_blank" rel="noopener" data-tool="${d.tab}">Report a bug or request a feature</a><span class="fb-hint">Opens a short Microsoft Form with this tool already filled in. Sign in with your RJ account.</span></p>
   <details class="about embed-box"><summary>Embed this tool in Canvas</summary><div class="about-b embed-b"></div></details>`;
-  const ui=sim.ui;ui.sec=sec;ui.review=sec.querySelector('.review');ui.rvNote=sec.querySelector('.rv-note');ui.lede=sec.querySelector('.lede');ui.uses=sec.querySelector('.real-uses');ui.gut=sec.querySelector('.gutbox');ui.uses2=sec.querySelector('.ru-after');ui.stage=sec.querySelector('#'+id+'-stage');ui.graph=sec.querySelector('#'+id+'-graph');
+  const ui=sim.ui;ui.sec=sec;ui.review=sec.querySelector('.review');ui.rvNote=sec.querySelector('.rv-note');ui.lede=sec.querySelector('.lede');ui.uses=sec.querySelector('.real-uses');ui.gut=sec.querySelector('.gutbox');ui.uses2=sec.querySelector('.ru-after');if(d.math){ui.mcard=el('details',{class:'mathcard'});sec.querySelector('.ru-after').after(ui.mcard);}if(SUPOBS){supify(sec);SUPOBS.observe(sec,{childList:true,subtree:true,characterData:true});}ui.stage=sec.querySelector('#'+id+'-stage');ui.graph=sec.querySelector('#'+id+'-graph');
   ui.clock=sec.querySelector('.clock');ui.play=sec.querySelector('[data-act=play]');ui.ctrls=sec.querySelector('.controls');ui.read=sec.querySelector('.readouts');
   ui.pred=sec.querySelector('.predict');ui.info=sec.querySelector('.info');ui.tbl=sec.querySelector('.tbl');ui.gm=sec.querySelector('#'+id+'-gm');ui.gx=sec.querySelector('#'+id+'-gx');ui.gy=sec.querySelector('#'+id+'-gy');
   ui.toast=sec.querySelector('.toast');ui.ctl={};ui.ctlW={};ui.actB={};ui.tiles={};ui.cap=sec.querySelector('.cap');ui.scale=sec.querySelector('.scale');ui.lab=sec.querySelector('.lab');ui.skills=sec.querySelector('.sim-head .skills');
@@ -222,7 +254,7 @@ function tourGo(sim,i){const st=tourSteps(sim);if(!st.length)return;if(i>=st.len
   const first=!sim.tour||!sim.tour.on;if(first&&sim.def.tourReset!==false){const base={};(sim.def.controls||[]).forEach(c=>base[c.id]=c.def);applyValues(sim,base);resetSim(sim);if(sim.ch.phase==='running'){sim.ch.phase='ask';renderChallenge(sim);}}
   sim.tour={on:true,i};const s=st[i];if(s.setup)s.setup(sim);setSpeed(sim,s.speed!==undefined?s.speed:0.25);setRunning(sim,!s.pause);
   const b=sim.ui.tourbar;b.hidden=false;if(sim.ui.cap)sim.ui.cap.hidden=true;const off=(sim.guide&&sim.guide.keep&&st[0]&&st[0].hook)?1:0;b.querySelector('.tb-n').textContent='Step '+(i+1-off)+' of '+(st.length-off);b.querySelector('.tb-t').textContent=lvText(s.title);
-  b.querySelector('.tb-x').innerHTML=lvText(s.text);b.querySelector('[data-tour=back]').disabled=i<=off;b.querySelector('[data-tour=next]').textContent=i===st.length-1?'Finish':'Next';}
+  b.querySelector('.tb-x').innerHTML=lvText(s.text)+(sim.def.math?stepVars(sim.def.math,lvText(s.text)):'');b.querySelector('[data-tour=back]').disabled=i<=off;b.querySelector('[data-tour=next]').textContent=i===st.length-1?'Finish':'Next';}
 function tourExit(sim,why){const wasOn=sim.tour&&sim.tour.on;sim.tour={on:false,i:0};sim.ui.tourbar.hidden=true;if(sim.ui.cap)sim.ui.cap.hidden=false;setSpeed(sim,1);setRunning(sim,true);if(sim.def.onTourExit)sim.def.onTourExit(sim);
   if(wasOn&&sim.mode==='guided'&&sim.guide&&sim.guide.phase==='tour'&&why!=='level'&&why!=='mode'){
     const S=sim.gutS;if(why==='exit'){if(sim.guide.keep&&S&&S.snap){applyValues(sim,S.snap);resetSim(sim);if(S.keepG)S.g=S.keepG;}setMode(sim,'lab',true);}
@@ -684,9 +716,9 @@ function toCSV(sim){if(!sim.trials.length)return '';const cols=trialCols(sim),q=
 
 /* ---------- level-dependent refresh ---------- */
 function applyLevel(sim){const ui=sim.ui,d=sim.def;
-  ui.lede.textContent=lvText(d.lede);if(ui.uses){const P=d.practical,u=P&&P.uses?(Array.isArray(P.uses)?P.uses:lvText(P.uses)):null;const hk=P&&P.hook?lvText(P.hook):'';ui.uses.hidden=!(hk||(u&&u.length));const ul=u&&u.length?'<details class="ru-d"'+(USES_OPEN?' open':'')+'><summary>'+USES_LABEL+'</summary><ul>'+u.map(x=>'<li>'+x+'</li>').join('')+'</ul></details>':'';
+  ui.lede.textContent=lvText(d.lede);supify(ui.lede);if(ui.uses){const P=d.practical,u=P&&P.uses?(Array.isArray(P.uses)?P.uses:lvText(P.uses)):null;const hk=P&&P.hook?lvText(P.hook):'';ui.uses.hidden=!(hk||(u&&u.length));const ul=u&&u.length?'<details class="ru-d"'+(USES_OPEN?' open':'')+'><summary>'+USES_LABEL+'</summary><ul>'+u.map(x=>'<li>'+x+'</li>').join('')+'</ul></details>':'';
     if(USES_AFTER&&ui.uses2){ui.uses.hidden=!hk;ui.uses.innerHTML=hk?'<p class="ru-q">'+hk+'</p>':'';ui.uses2.hidden=!ul;ui.uses2.innerHTML=ul;}else ui.uses.innerHTML=(hk?'<p class="ru-q">'+hk+'</p>':'')+ul;}if(ui.scale)ui.scale.textContent=lvText(d.scale);
-  if(ui.skills)ui.skills.innerHTML='<b>The math:</b> '+lvText(d.skills);
+  if(ui.skills)ui.skills.innerHTML='<b>The math:</b> '+lvText(d.skills);if(ui.mcard){ui.mcard.innerHTML=mathcardHTML(d.math);if(sim.mode!=='guided')ui.mcard.open=true;mathcardVis(sim);}
   if(ui.lab)ui.lab.innerHTML='<p class="lab-h">Investigation</p>'+lvText(d.lab);
   gutRender(sim);
   if(sim.tour&&sim.tour.on)tourExit(sim,'level');
@@ -917,17 +949,18 @@ function rvOpenLab(sim,q){const L=q.lab,base={};(sim.def.controls||[]).forEach(c
 BL.rvOpenLab=rvOpenLab;
 
 const unitFor=(cid,i)=>{const c=(BL.COURSES||[]).find(x=>x.id===cid),u=c&&c.units[+i];return u?{c,u,i:+i,id:'u-'+cid+'-'+i}:null;};
-function parseUnit(id){const m=/^u-(.+)-(\d+)$/.exec(id||'');return m?unitFor(m[1],m[2]):null;}
-function unitTools(U){return linkList(U.u.ids);}
-function toolSteps(d){const s=[];if(d.tour&&d.tour.length)s.push(['guided','Guided walkthrough']);if(d.review)s.push(['review','Review questions']);if(!s.length)s.push(['lab','Full lab']);return s;}
-function unitPath(U){const out=[];unitTools(U).forEach(d=>toolSteps(d).forEach(([m,l])=>out.push({d,m,l})));return out;}
+const finalFor=(cid,k)=>{const c=(BL.COURSES||[]).find(x=>x.id===cid),f=c&&c.finals&&c.finals[+k];if(!f)return null;const ids=[],from={};(f.units||[]).forEach(e=>{const i=Array.isArray(e)?e[0]:e,only=Array.isArray(e)?e[1]:null,u=c.units[i];if(u)u.ids.forEach(id=>{if((!only||only.includes(id))&&!ids.includes(id)){ids.push(id);from[id]=u;}});});return {c,u:{n:f.n||'Final review',t:f.t,note:f.note,ids,from},i:'f'+k,id:'f-'+cid+'-'+k,final:true};};
+function parseUnit(id){let m=/^u-(.+)-(\d+)$/.exec(id||'');if(m)return unitFor(m[1],m[2]);m=/^f-(.+)-(\d+)$/.exec(id||'');return m?finalFor(m[1],m[2]):null;}
+function unitTools(U){const L=linkList(U.u.ids);return U.final?L.filter(d=>toolSteps(d,U).length):L;}
+function toolSteps(d,U){const s=[];if(U&&U.final){if(d.learn&&(d.challenges||d.review))s.push(['test','Test yourself']);else if(d.review)s.push(['review','Review questions']);if(d.frq)s.push(['frq','Free-response practice']);return s;}if(d.tour&&d.tour.length)s.push(['guided','Guided walkthrough']);if(d.review)s.push(['review','Review questions']);if(!s.length)s.push(['lab','Full lab']);return s;}
+function unitPath(U){const out=[];unitTools(U).forEach(d=>toolSteps(d,U).forEach(([m,l])=>out.push({d,m,l})));return out;}
 const unitUrl=(d,m,U)=>'#'+d.hash+'@'+m+'@'+U.id;
 const seenKey=()=>LAB_KEY+'-unit-seen';
 function seenLoad(){try{return JSON.parse(store.get(seenKey())||'{}')||{};}catch(e){return {};}}
 function renderPathbar(sim,ctx,mode){const bar=sim.ui.sec.querySelector('.pathbar');if(!bar)return;const U=parseUnit(ctx);if(!U){bar.hidden=true;bar.innerHTML='';return;}
   const path=unitPath(U),n=path.findIndex(p=>p.d===sim.def&&p.m===mode),nx=n>=0?path[n+1]:path[0];
   const seen=seenLoad();seen[sim.def.id+'@'+mode]=1;store.set(seenKey(),JSON.stringify(seen));
-  bar.innerHTML=`<a class="pb-back" href="#${U.id}">← Unit path</a><span class="pb-t">${U.c.name}, ${U.u.n||'Unit'}${n>=0?` · Step ${n+1} of ${path.length}`:''}</span>${n>=0&&n===path.length-1?`<a class="btn primary" href="#${U.id}">Finish</a>`:nx?`<a class="btn primary" href="${unitUrl(nx.d,nx.m,U)}">Next step →</a>`:''}`;bar.hidden=false;}
+  bar.innerHTML=`<a class="pb-back" href="#${U.id}">← ${U.final?'Final review':'Unit path'}</a><span class="pb-t">${U.c.name}, ${U.u.n||'Unit'}${n>=0?` · Step ${n+1} of ${path.length}`:''}</span>${n>=0&&n===path.length-1?`<a class="btn primary" href="#${U.id}">Finish</a>`:nx?`<a class="btn primary" href="${unitUrl(nx.d,nx.m,U)}">Next step →</a>`:''}`;bar.hidden=false;}
 function canvasSteps(what,copyWord,img5){return `<ol class="emb-steps">
   <li><b>Copy the embed code</b> with the red button above.</li>
   <li>In Canvas, open the page (or assignment or discussion) and click <b>Edit</b>.<img src="img/canvas-embed-1.jpg" alt="A Canvas page with the Edit button outlined" loading="lazy" width="800" height="300"></li>
@@ -947,16 +980,16 @@ function bindWhy(root){const w=root.querySelector('.why');if(!w)return;const b=w
   document.addEventListener('keydown',e=>{if(e.key==='Escape'&&w.classList.contains('projecting'))off();});}
 let unitEl=null,curUnit=null;
 function renderUnit(U){curUnit=U;const tools=unitTools(U),seen=seenLoad();let stepN=0;
-  const rows=tools.map(d=>{const steps=toolSteps(d).map(([m,l])=>{stepN++;const ok=!!seen[d.id+'@'+m];let extra='';if(m==='review'){const list=(d.review.questions||[]).filter(q=>atLeast(q.lvl)),a=rvLoad(d.id),did=list.filter(q=>a[q.id]&&a[q.id].done).length,got=list.filter(q=>a[q.id]&&a[q.id].ok).length;extra=did?` <span class="u-score">${got} of ${list.length} right</span>`:` <span class="u-score">${list.length} questions</span>`;}
+  const rows=tools.map(d=>{const steps=toolSteps(d,U).map(([m,l])=>{stepN++;const ok=!!seen[d.id+'@'+m];let extra='';if(m==='review'){const list=(d.review.questions||[]).filter(q=>atLeast(q.lvl)),a=rvLoad(d.id),did=list.filter(q=>a[q.id]&&a[q.id].done).length,got=list.filter(q=>a[q.id]&&a[q.id].ok).length;extra=did?` <span class="u-score">${got} of ${list.length} right</span>`:` <span class="u-score">${list.length} questions</span>`;}
       return `<a class="u-step${ok?' seen':''}" href="${unitUrl(d,m,U)}"><span class="u-n" aria-hidden="true">${ok?'✓':stepN}</span><span>${l}${extra}${ok?'<span class="vh"> (opened)</span>':''}</span></a>`;}).join('');
-    const lab=toolSteps(d).some(s=>s[0]==='lab')?'':`<a class="u-opt" href="${unitUrl(d,'lab',U)}">Full lab (optional)</a>`;
-    return `<li class="u-tool"><h3>${d.tab}</h3><p>${d.card||''}</p><div class="u-steps">${steps}</div>${lab}</li>`;}).join('');
+    const lab=U.final||toolSteps(d,U).some(s=>s[0]==='lab')?'':`<a class="u-opt" href="${unitUrl(d,'lab',U)}">Full lab (optional)</a>`;
+    return `<li class="u-tool">${U.final&&U.u.from[d.id]?`<p class="u-from">${U.u.from[d.id].n||''}${U.u.from[d.id].n?': ':''}${U.u.from[d.id].t}</p>`:''}<h3>${d.tab}</h3><p>${d.card||''}</p><div class="u-steps">${steps}</div>${lab}</li>`;}).join('');
   const lessons=(U.u.links||[]).map(x=>`<li><a href="${x.href}" target="_blank" rel="noopener">${x.title} ↗</a></li>`).join('');
   const seenUrl={},ap=[];tools.forEach(d=>{((d.review&&d.review.ap)||[]).forEach(a=>{if(!seenUrl[a.url+a.title]){seenUrl[a.url+a.title]=1;ap.push(a);}});});
   const total=stepN;
   unitEl.innerHTML=`<a class="u-back" href="#path-${U.c.id}">← All ${U.c.name} units</a><p class="eyebrow">${U.c.name}${U.u.n?' · '+U.u.n:''}</p><h2>${U.u.t}</h2>
-  <p class="lede">${total} steps, in order. Finish each one, then press <b>Next step</b> to move on.</p>${whyHtml(U.u.why)}
-  <div class="u-missed"><b>Missed class?</b> Start at step 1 and work down. This covers the tools for the unit, not everything your teacher did in class, so still check Canvas for notes and assignments.</div>
+  <p class="lede">${U.final?`${tools.length} tools, ${total} practice sets, in the order your class covered them.`:`${total} steps, in order. Finish each one, then press <b>Next step</b> to move on.`}</p>${whyHtml(U.u.why)}
+  ${U.final?`<div class="u-missed"><b>Studying for the final?</b> Work down the list, or jump to the units you feel least sure about. Every set has worked answers, and <b>See it in the lab</b> rebuilds a question in the simulation. ${U.u.note||''} This covers the Raider Labs tools only, so use your teacher’s study guide too.</div>`:`<div class="u-missed"><b>Missed class?</b> Start at step 1 and work down. This covers the tools for the unit, not everything your teacher did in class, so still check Canvas for notes and assignments.</div>`}
   ${lessons?`<div class="u-lessons"><h3>Start with the lesson</h3><ul>${lessons}</ul></div>`:''}
   <ol class="u-tools">${rows}</ol>${apLinksHtml(ap,'',atLeast('ap'))}
   <details class="about embed-box"><summary>Put this unit path in Canvas</summary><div class="about-b u-emb"></div></details>
@@ -1021,7 +1054,7 @@ function buildHome(){const units=document.getElementById('units');units.innerHTM
   if(bw){bw.innerHTML=['<button type="button" data-b="topic">By topic</button>'].concat(courses.map(c=>`<button type="button" data-b="${c.id}">${c.name}</button>`)).join('');
     bw.querySelectorAll('button').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.b===browse));b.onclick=()=>{browse=b.dataset.b;store.set(LAB_KEY+'-browse',browse);buildHome();drawThumbs();};});}
   const course=courses.find(c=>c.id===browse);
-  if(course){const intro=el('p',{class:'lede course-lede'},course.blurb||'');units.appendChild(intro);
+  if(course){const intro=el('p',{class:'lede course-lede'},course.blurb||'');units.appendChild(intro);if((course.finals||[]).length){const fb=el('div',{class:'finals-row'});fb.innerHTML=course.finals.map((f,k)=>`<a class="unit-go final-go" href="#f-${course.id}-${k}">${f.t} →</a>`).join('');units.appendChild(fb);}
     course.units.forEach((u,i)=>{const list=linkList(u.ids),ext=u.links||[];if(!list.length&&!ext.length)return;const sec=el('section',{class:'unit'});
       sec.innerHTML=`<h3 class="unit-h"><span class="unit-n">${u.n||('Step '+(i+1))}</span> ${u.t}</h3>${u.note?`<p class="unit-note">${u.note}</p>`:''}${list.length?`<a class="unit-go" href="#u-${course.id}-${i}">${u.why?'Why we learn this, then walk through the unit →':'Walk through this unit →'}</a>`:''}<div class="cards">${ext.map(extCard).join('')}${list.map(card).join('')}</div>`;units.appendChild(sec);});
     const adv=linkList(course.further),ext=course.furtherLinks||[];if(adv.length||ext.length){const sec=el('section',{class:'unit further'});sec.innerHTML=`<h3 class="unit-h"><span class="unit-n">Go further</span> For students who want more</h3><p class="unit-note">Optional tools that go past what class time allows.</p><div class="cards">${adv.map(card).join('')}${ext.map(extCard).join('')}</div>`;units.appendChild(sec);}}
@@ -1033,7 +1066,12 @@ function buildHome(){const units=document.getElementById('units');units.innerHTM
 
 /* Styles for the skills line, "Your turn" calculations, num challenges and the reveal's math line. Kept here (theme tokens only)
    so every site that shares this engine gets them without a CSS change. */
-const ENGINE_CSS=`.sim-head .skills{margin:0 0 6px;font-size:14px;line-height:1.4;color:var(--fg)}.sim-head .skills b{color:var(--rj-ink);font-weight:700;margin-right:.2em}
+const ENGINE_CSS=`.mathcard{margin:8px 0 10px;padding:8px 14px;background:var(--card);border:1px solid var(--line);border-left:4px solid var(--rj-ink);border-radius:8px;line-height:1.5;font-size:15px}
+.mathcard summary{cursor:pointer}.mathcard summary b{color:var(--rj-ink)}.mathcard .mc-f,.mathcard .mc-s,.mathcard .mc-so{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif}.mathcard .mc-f{font-size:1.15em}
+.mathcard i{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:1.08em}.mathcard p{margin:6px 0}.mc-v{list-style:none;margin:6px 0;padding:0;display:flex;flex-wrap:wrap;gap:2px 18px}
+.tb-vars{margin:8px 0 0;font-size:14px;line-height:1.5;color:var(--fg)}.tb-vars b{color:var(--rj-ink)}.tb-vars span{white-space:nowrap}.tb-vars i{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:1.08em}
+.mc-s{font-weight:700;margin-right:.15em}.mc-s::after{content:" ="}.mc-so{margin:2px 0 4px;padding-left:1.3em;font-size:1.05em}
+.sim-head .skills{margin:0 0 6px;font-size:14px;line-height:1.4;color:var(--fg)}.sim-head .skills b{color:var(--rj-ink);font-weight:700;margin-right:.2em}
 .calc-q{margin:4px 0 10px;font-size:16px;line-height:1.5}.gs .calc-q{font-size:inherit}.calc .rv-num{margin:0 0 8px}.calc .row{align-items:center}
 .calc .verdict{margin:6px 0 8px}.calc .verdict:focus{outline:0}.calc-steps{margin:6px 0 8px;padding:8px 12px;background:var(--card);border:1px solid var(--line);border-radius:8px;line-height:1.5}
 .calc .rv-steps{margin:6px 0 8px}.calc-ans{margin:6px 0 10px}.gs-calc{margin:0 0 10px}.ch-num{margin:8px 0 10px}.ch-num .vl-in{width:10em}
@@ -1044,7 +1082,7 @@ BL.start=function(){
   engineCss();
   if(EMBED)document.documentElement.classList.add('embed');
   homeEl=document.getElementById('home');simsEl=document.getElementById('sims');jumpEl=document.getElementById('jump');backEl=document.getElementById('back');
-  DEFS.forEach(d=>{applyPractical(d);if(REVIEWS[d.id])d.review=REVIEWS[d.id];sims[d.id]=makeSim(d);});
+  DEFS.forEach(d=>{applyPractical(d);if(REVIEWS[d.id])d.review=REVIEWS[d.id];if(MATHC[d.id])d.math=MATHC[d.id];sims[d.id]=makeSim(d);});
   unitEl=el('section',{id:'unitpage',class:'unitpage'});unitEl.hidden=true;simsEl.parentNode.insertBefore(unitEl,simsEl);
   readPal();buildHome();
   const lvlBtns=[...document.querySelectorAll('#lvl button')];
@@ -1068,7 +1106,7 @@ BL.start=function(){
       else if(d.timeless){sim.t+=rdt;challengeTick(sim);}
       const vdt=(sim.running||stepping||d.timeless)?rdt*sim.speed:0;sim.vt+=vdt;drawStageTo(sim,sim.ui.stage,vdt);
       if(sim.game){gameTick(sim);}
-      acc+=rdt;if(acc>0.1){acc=0;updateReadouts(sim);if(sim.mode!=='vlab'&&(sim.gmode==='live'||d.timeless))drawGraph(sim);if(sim.game)gameClock(sim);}}
+      acc+=rdt;if(acc>0.1){acc=0;mathcardVis(sim);updateReadouts(sim);if(sim.mode!=='vlab'&&(sim.gmode==='live'||d.timeless))drawGraph(sim);if(sim.game)gameClock(sim);}}
     requestAnimationFrame(frame);}
   requestAnimationFrame(frame);
 };
