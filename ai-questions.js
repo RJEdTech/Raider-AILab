@@ -33,7 +33,11 @@ const FOCUS={
  machinespeed:{1:'ARTEX was built for security testing and then used by attackers: what a tool is made for is not what it is used for.',4:'At machine speed, defenders who only check alerts once a day are too slow.',7:'One operator can aim it at many places at once.'},
  phantom:{3:'Only the evidence lets anyone check what happened, and the first story was not confirmed.'},
  cluster:{3:'A week of headlines is not evidence by itself; look at the counts over years.'},
- defenders:{4:'Every win had a person in it: someone read the alarm, did the repair or installed the fix.',5:'When prevention works, nothing seems to happen, so people forget who did the work.'}
+ defenders:{4:'Every win had a person in it: someone read the alarm, did the repair or installed the fix.',5:'When prevention works, nothing seems to happen, so people forget who did the work.'},
+ mirror:{1:'It learned overconfidence, flattery and bias from our own words and votes.',2:'Scored on human ratings, it learned to sound sure and to agree.',3:'One clean average, or a trade secret, hides who the AI gets wrong.'},
+ compass:{2:'An app scored on minutes learns to keep you there; one scored on your goals learns to let you go.',5:'You pay in time; 45 minutes a day is about 274 hours a year.'},
+ jobs:{7:'AI touches a job through its tasks, and whether jobs grow depends on demand too.'},
+ datacenter:{5:'Who pays for new plants and lines is a choice regulators make.',7:'One data center can use as much water as a small city, or almost none, depending on its design.'}
 };
 const css=`.aiq{margin-top:14px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--rj);border-radius:12px;padding:12px 16px}
 .aiq h3{margin:0 0 6px;font-size:1.02rem}.aiq p.aiq-sub{margin:0 0 8px;color:var(--muted);font-size:.92rem}

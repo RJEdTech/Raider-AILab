@@ -110,3 +110,27 @@ defenders:{f:'percent = part ÷ whole × 100',
  beh:'Changing the whole changes the percent: 43 of 70 is 61%, but 43 of the 54 found is 80%.',
  solve:['part = percent × whole ÷ 100','whole = part ÷ percent × 100']}
 });
+/* The mirror, compass, jobs and data center (Nov 19, 2026) */
+BioLab.addMath({
+mirror:{f:'accuracy = 100 − [(1 − `s`) · `e`_{A} + `s` · `e`_{B}]',
+ v:[['`s`','share of test photos from group B'],['`e`_{A}','error rate for group A (%)'],['`e`_{B}','error rate for group B (%)']],
+ why:'An overall result is a weighted average: each group counts by its share of the test.',
+ beh:'Linear in `s`: a small `s` lets a big `e`_{B} barely move the total.',
+ solve:['`s` = (`E` − `e`_{A}) ÷ (`e`_{B} − `e`_{A}) for a target overall error `E`']},
+compass:{f:'`H` = 365`m` ÷ 60',
+ v:[['`m`','minutes a day'],['`H`','hours a year']],
+ why:'A daily rate times the days in a year, converted from minutes to hours.',
+ beh:'Linear: every extra 10 minutes a day adds about 61 hours a year.',
+ solve:['`m` = 60`H` ÷ 365','Share of free time = 7`m` ÷ 60 ÷ 40']},
+jobs:{f:'change = (1 + `d`) ÷ (1 + `g`) − 1',
+ v:[['`g`','AI speed-up: extra work per worker'],['`d`','growth in how much of the work is wanted']],
+ why:'Workers needed = work to do ÷ work per worker; both grow, so compare the growth factors.',
+ beh:'Jobs grow exactly when `d` > `g`. Over `n` years: ((1 + `d`) ÷ (1 + `g`))^{`n`}.',
+ solve:['Break-even demand: `d` = `g`','`d` = (1 + change)(1 + `g`) − 1']},
+datacenter:{f:'Δ = [`F` · `E`_{h} ÷ (`E`_{h} + `E`) + (1 − `a`)`c``E` − `F`] ÷ homes',
+ v:[['`F`','old grid costs ($700M)'],['`E`_{h}','homes’ electricity (10 TWh)'],['`E`','data center electricity'],['`c`','new cost per TWh'],['`a`','share of new costs charged to the data center']],
+ why:'Old costs are split by electricity used; new costs are split by a share regulators choose.',
+ beh:'The first term falls as `E` grows (a rational function); the second rises linearly in `E` unless `a` = 1.',
+ solve:['Break-even `a` = 1 − [`F` − `F``E`_{h} ÷ (`E`_{h} + `E`)] ÷ (`c``E`)']}
+});
+
