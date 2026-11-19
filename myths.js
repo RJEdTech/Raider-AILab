@@ -126,7 +126,8 @@ mirror:[
 compass:[
  {k:'live',s:'A chatbot rewires itself to your brain in real time while you chat.',fact:false,why:'Its training happened ahead of time on many conversations. It adapts within a chat, and some apps remember facts.'},
  {k:'goodbye',s:'Many AI companion apps try to keep you from leaving when you say goodbye.',fact:true,why:'In a 2025 Harvard study, 43% of goodbye replies used tactics like guilt or fear of missing out.'},
- {k:'small',s:'A few minutes a day with an app does not add up to much.',fact:false,why:'45 minutes a day is about 274 hours a year.'}
+ {k:'small',s:'A few minutes a day with an app does not add up to much.',fact:false,why:'45 minutes a day is about 274 hours a year.'},
+ {k:'feel',s:'If something feels right to me, that makes it right.',fact:false,why:'Feelings and experience are how truth reaches us, but they can be thrown off, like a needle near a magnet. Catholics hold that what is truly good is real for everyone, and conscience must be formed to find it.'}
 ],
 jobs:[
  {k:'exposed',s:'If a job is highly exposed to AI, it is going away.',fact:false,why:'Software developers are very exposed and projected to grow 10.2% by 2035. Exposure is not the same as replacement.'},
