@@ -25,7 +25,7 @@ const SIM={
  id:'rollout',hash:'rollout',apUnit:5,order:3,tab:'The update that broke everything',kind:'Simulation',
  card:'Push a fix to 1,000 school laptops. Send it to everyone at once, or to a few first? See why rushed fixes cause outages, and what waiting costs.',
  title:'The update that broke everything: rushing a fix vs. testing it',
- lede:{bio:'Tool 3 of 8. In tool 1, a patch was a new lock. But sometimes the new lock jams the door. An update with a hidden mistake can stop computers from working. Send an update to a school’s 1,000 laptops and choose: everyone at once, or a few first, in <b>rings</b>.',
+ lede:{bio:'Tool 3 of 8. In tool 1, a patch was a new lock. But sometimes the new lock jams the door. An update with a hidden mistake can stop computers from working. Send an update to a school’s 1,000 laptops and choose: everyone at once, or a few first, in rings.',
   honors:'Tool 3 of 8. Sending a fix in rings limits the damage from a bad update to the laptops reached before anyone noticed. The cost is time: a good fix reaches the last ring later, and a hole stays open that much longer.',
   ap:'Tool 3 of 8. Broken = N × (fraction reached before detection). The cost of rings is the laptop-hours left unpatched: N[(1 − r₁)w + (1 − r₂)w] for ring fractions r₁, r₂ and wait w.'},
  skills:{bio:'Percents of a whole · Pre-algebra',honors:'Percents and comparing two plans · Algebra 1',ap:'Percents, piecewise functions and trade-offs · Algebra 1, Algebra 2'},
