@@ -115,3 +115,28 @@ defenders:[
  {k:'jobs',s:'Cybersecurity jobs are shrinking because of AI.',fact:false,why:'The U.S. Bureau of Labor Statistics projects security analyst jobs to grow 21% from 2025 to 2035.'}
 ]
 });
+
+/* The mirror, compass, jobs and data center (Nov 19, 2026) */
+BioLab.addMyths({
+mirror:[
+ {k:'math',s:'If an AI result comes from math, it cannot be biased.',fact:false,why:'The math repeats whatever is in its data and test. A program reported about 97% accuracy while getting 34.7% wrong for darker-skinned women.'},
+ {k:'sure',s:'People who say they are 100% sure are almost always right.',fact:false,why:'In classic studies they were right only 70 to 85% of the time.'},
+ {k:'shark',s:'In 2001, the “Summer of the Shark,” shark attacks went down.',fact:true,why:'The International Shark Attack File counted 76 in 2001, down from 85 in 2000, while news coverage soared.'}
+],
+compass:[
+ {k:'live',s:'A chatbot rewires itself to your brain in real time while you chat.',fact:false,why:'Its training happened ahead of time on many conversations. It adapts within a chat, and some apps remember facts.'},
+ {k:'goodbye',s:'Many AI companion apps try to keep you from leaving when you say goodbye.',fact:true,why:'In a 2025 Harvard study, 43% of goodbye replies used tactics like guilt or fear of missing out.'},
+ {k:'small',s:'A few minutes a day with an app does not add up to much.',fact:false,why:'45 minutes a day is about 274 hours a year.'}
+],
+jobs:[
+ {k:'exposed',s:'If a job is highly exposed to AI, it is going away.',fact:false,why:'Software developers are very exposed and projected to grow 10.2% by 2035. Exposure is not the same as replacement.'},
+ {k:'np',s:'Nurse practitioner is the fastest-growing job in the 2025–35 projections.',fact:true,why:'Projected growth of 41.0%.'},
+ {k:'openings',s:'A shrinking job has no openings.',fact:false,why:'People retire and move on: customer service is projected to shrink and still have about 289,500 openings a year.'}
+],
+datacenter:[
+ {k:'bills',s:'A new data center always raises home electric bills.',fact:false,why:'It depends on whether the grid needs new building and who pays for it. One study found data centers slightly lowered average rates from 2015 to 2024.'},
+ {k:'water',s:'Some data centers use very little water.',fact:true,why:'Closed-loop designs reuse their water; one Texas campus says it needs about 7,000 gallons a day.'},
+ {k:'spi',s:'A data center on South Padre Island uses more water than the town.',fact:false,why:'We found no data center on the island and no source for this claim.'}
+]
+});
+
