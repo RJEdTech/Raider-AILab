@@ -21,7 +21,7 @@ const SIM={
  id:'bugpatch',hash:'bugpatch',apUnit:5,order:1,tab:'Bugs, holes and patches',kind:'Learning tool',
  card:'Start here. Why does your phone keep asking to update? Build the idea of bugs, holes and patches, then see why one old floor can shake a whole system.',
  title:'Bugs, holes and patches: why your phone keeps asking to update',
- lede:{bio:'Tool 1 of 8, start here. Think of code as a building with floors. A <b>bug</b> is a mistake in the building. A <b>hole</b> is a mistake someone could use to get in, like an unlocked door. A <b>patch</b> is a new lock. When the builder stops making locks for a floor, that floor is at its <b>end of life</b>. Everything above it still has to stand on it.',
+ lede:{bio:'Tool 1 of 8, start here. Think of code as a building with floors. A bug is a mistake in the building. A hole is a mistake someone could use to get in, like an unlocked door. A patch is a new lock. When the builder stops making locks for a floor, that floor is at its end of life. Everything above it still has to stand on it.',
   honors:'Tool 1 of 8. A system works only when every layer under it works, so the chances multiply. That is why one unsupported layer at the bottom can make the whole system less reliable than its weakest part.',
   ap:'Tool 1 of 8. For independent layers, P(system works) = Π pᵢ, which is never larger than the smallest pᵢ. Expected bad days per year = 365(1 − Π pᵢ).'},
  skills:{bio:'Multiplying chances (probability) · Algebra 1',ap:'Products of probabilities and expected value · Algebra 1, Statistics'},
