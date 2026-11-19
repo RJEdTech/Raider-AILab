@@ -71,3 +71,47 @@ scorebot:[
  {k:'rubric',s:'A clear rubric makes scoring more consistent.',fact:true,why:'For human and AI graders alike.'}
 ]
 });
+
+/* "Why everything is breaking" (Nov 19, 2026) */
+BioLab.addMyths({
+bugpatch:[
+ {k:'works',s:'If my phone still works, skipping updates is fine.',fact:false,why:'Most updates are patches for holes someone found. The phone works the same with the door open.'},
+ {k:'eol',s:'A device can keep running for years after its maker stops sending fixes.',fact:true,why:'End of life means no new locks, not that it stops. That is why old systems are still out there.'},
+ {k:'weak',s:'A system is about as reliable as its best part.',fact:false,why:'Everything must work at once, so the chances multiply. The system is a little worse than its worst part.'}
+],
+doors:[
+ {k:'million',s:'A 6-digit PIN is safe because there are a million possibilities.',fact:false,why:'A computer guessing 1,000 a second tries all of them in about 17 minutes.'},
+ {k:'fridge',s:'A fridge can be hacked.',fact:true,why:'In October 2026, internet-connected fridge controllers in hundreds of French supermarkets were set to defrost overnight.'},
+ {k:'default',s:'The password a device comes with is secret to you.',fact:false,why:'Default passwords are often shared across every copy of a device, and lists of them are public.'}
+],
+rollout:[
+ {k:'update',s:'An update can break a computer.',fact:true,why:'An update is new code, and code can have mistakes. CrowdStrike’s July 2024 update crashed about 8.5 million Windows computers.'},
+ {k:'outage',s:'Every big outage is a cyberattack.',fact:false,why:'In November 2026, Microsoft, the FAA and JPMorgan each blamed their own bugs or equipment, not attackers.'},
+ {k:'fast',s:'The safest way to send a fix is to everyone at once.',fact:false,why:'If the fix has a mistake, everyone breaks. Sending to a few first catches it early, at the cost of waiting.'}
+],
+dwell:[
+ {k:'patched',s:'Once a hole is patched, any intruder is locked out.',fact:false,why:'A patch locks the door. Someone who got in earlier is still inside until someone finds them.'},
+ {k:'days',s:'Attackers now often use a hole within days of it being found.',fact:true,why:'Mandiant measured the average falling from 63 days (2018–2019) to 5 days (2023).'},
+ {k:'logs',s:'Sign-in records can show that an intruder got in.',fact:true,why:'An odd sign-in, like 3 a.m. from another country, is often how intruders are found.'}
+],
+machinespeed:[
+ {k:'skill',s:'Only expert hackers can run a large cyberattack.',fact:false,why:'The FBI said tools like ARTEX let people with limited skill run complex attacks on many targets.'},
+ {k:'gone',s:'Once a tool is taken offline, it stops spreading.',fact:false,why:'ARTEX was removed on October 8, 2026, but copies kept spreading; over 1,600 were found running by November.'},
+ {k:'line',s:'If slightly more problems arrive than get fixed each week, the waiting line keeps growing.',fact:true,why:'The backlog grows by the difference every week, so a small gap becomes a long wait.'}
+],
+phantom:[
+ {k:'oldsmar',s:'The FBI confirmed that a hacker tried to poison Oldsmar’s water in 2021.',fact:false,why:'In 2023 the FBI said it could not confirm a targeted intrusion, and the former city manager said it was likely an employee’s mistake.'},
+ {k:'first',s:'The first report of an event is sometimes wrong about the cause.',fact:true,why:'Early reports rely on early statements. Oldsmar’s cause was revised two years later.'},
+ {k:'ratio',s:'Going from 100 to 11,100 is a 111% increase.',fact:false,why:'It is 111 times as much, which is an 11,000% increase.'}
+],
+cluster:[
+ {k:'cluster',s:'Five big outages in one week proves they are connected.',fact:false,why:'Random events bunch up. With 2 a week on average, weeks of 5 or more happen about 2 or 3 times a year by chance.'},
+ {k:'cve',s:'More software holes were published in 2026 than in 2025.',fact:true,why:'Over 100,000 by mid-November 2026, more than double 2025’s 48,185.'},
+ {k:'notice',s:'Once you start noticing something, it can seem more common than it is.',fact:true,why:'That is the frequency illusion.'}
+],
+defenders:[
+ {k:'y2k',s:'Y2K was a hoax.',fact:false,why:'The bug was real. About $100 billion of repairs in the U.S. fixed it in time, so little went wrong.'},
+ {k:'aifix',s:'AI can find and fix software holes, not just exploit them.',fact:true,why:'In DARPA’s 2025 challenge, AI systems found 54 of 70 planted flaws and fixed 43.'},
+ {k:'jobs',s:'Cybersecurity jobs are shrinking because of AI.',fact:false,why:'The U.S. Bureau of Labor Statistics projects security analyst jobs to grow 21% from 2025 to 2035.'}
+]
+});
