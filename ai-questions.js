@@ -25,7 +25,15 @@ const FOCUS={
  coauthor:{4:'Checking every claim is the stage that keeps made-up facts from shipping.',5:'Your name is on the project, so you pay for its mistakes.'},
  learnwith:{5:'If the AI does the thinking, you pay later, on the test without it.'},
  detector:{5:'A small false-positive rate lands on real, honest students.',7:'Run on every essay in a big school, even a rare error hits many people.'},
- promptcost:{7:'One prompt costs little; billions of prompts a day add up.'}
+ promptcost:{7:'One prompt costs little; billions of prompts a day add up.'},
+ bugpatch:{5:'When an old layer fails, everything built on it fails too, and the people who depend on it pay.',7:'One old layer can sit under millions of users, like the FAA’s copper lines.'},
+ doors:{3:'A device on the open internet with a guessable password is a door anyone can try.',7:'One weak setting was copied across hundreds of stores.'},
+ rollout:{4:'Sending a fix to a few first lets a person catch a mistake before it reaches everyone.',7:'A bad update sent to everyone at once reached 8.5 million computers in 2024.'},
+ dwell:{4:'A patch closes the door; only a person checking the records finds who got in.'},
+ machinespeed:{1:'ARTEX was built for security testing and then used by attackers: what a tool is made for is not what it is used for.',4:'At machine speed, defenders who only check alerts once a day are too slow.',7:'One operator can aim it at many places at once.'},
+ phantom:{3:'Only the evidence lets anyone check what happened, and the first story was not confirmed.'},
+ cluster:{3:'A week of headlines is not evidence by itself; look at the counts over years.'},
+ defenders:{4:'Every win had a person in it: someone read the alarm, did the repair or installed the fix.',5:'When prevention works, nothing seems to happen, so people forget who did the work.'}
 };
 const css=`.aiq{margin-top:14px;background:var(--card);border:1px solid var(--line);border-left:5px solid var(--rj);border-radius:12px;padding:12px 16px}
 .aiq h3{margin:0 0 6px;font-size:1.02rem}.aiq p.aiq-sub{margin:0 0 8px;color:var(--muted);font-size:.92rem}
