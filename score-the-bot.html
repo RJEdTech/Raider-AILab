@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Raider AILab Score the Bot</title>
+<meta name="description" content="Write the grading rule for a quiz-taking bot and watch it learn to bluff, or to say I don’t know. Raider AILab, Regis Jesuit High School.">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+/* Layout idea: the picture is the page. One large stage, one sentence under it, one obvious button. */
+:root{
+  --bg:#f3f3f1; --card:#ffffff; --card2:#f1f1ee; --fg:#1c1c1f; --muted:#5d5d63; --line:#d8d8d3;
+  --rj:#C11430; --rj-ink:#a8102a; --focus:#1f6feb; --good:#1b7339; --bad:#b3261e;
+  --cv-bg:#f7f8f6; --hl:#f6dfa4; --think:#a8178f; --you:#C11430;
+  --font:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15161a; --card:#1d1f24; --card2:#282b32; --fg:#ececef; --muted:#a2a2aa; --line:#353840;
+  --rj-ink:#ed516a; --focus:#6ea8ff; --good:#5cc27f; --bad:#f2827a;
+  --cv-bg:#191b20; --hl:#6b5520; --think:#ec74da; --you:#C11430; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15161a; --card:#1d1f24; --card2:#282b32; --fg:#ececef; --muted:#a2a2aa; --line:#353840;
+  --rj-ink:#ed516a; --focus:#6ea8ff; --good:#5cc27f; --bad:#f2827a;
+  --cv-bg:#191b20; --hl:#6b5520; --think:#ec74da; --you:#C11430; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--font);-webkit-text-size-adjust:100%}
+a{color:var(--rj-ink)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+
+.mast{background:#2a2a2a;border-bottom:4px solid var(--rj)}
+.mast-in{max-width:1132px;margin:0 auto;padding:9px 16px;display:flex;align-items:center;gap:13px}
+.mast img{height:36px;width:auto;display:block}
+.mast h1{margin:0;color:#fff;font-size:19px;line-height:1.15;font-weight:700}
+.mast p{margin:2px 0 0;color:#b8b8b8;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+.mast a{margin-left:auto;color:#f2f2f2;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap}
+.mast a:hover{text-decoration:underline}
+
+.wrap{max-width:1132px;margin:0 auto;padding:10px 16px 28px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:10px 18px;flex-wrap:wrap;margin-bottom:8px}
+.eyebrow{margin:0;color:var(--rj-ink);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.top h2{margin:0;font-size:24px;line-height:1.2;text-wrap:balance}
+.steps{list-style:none;margin:0;padding:0;display:flex;gap:4px;flex-wrap:wrap}
+.steps button{font:600 13px/1 var(--font);padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer}
+.steps button .n{font-variant-numeric:tabular-nums}
+.steps button[aria-current="step"]{background:var(--rj);border-color:var(--rj);color:#fff}
+.steps button.done{color:var(--fg)}
+.steps button:disabled{opacity:.5;cursor:default}
+@media(max-width:820px){.steps button .t{display:none}.steps button[aria-current="step"] .t{display:inline}}
+
+.stagebox{background:var(--cv-bg);border:1px solid var(--line);border-radius:14px}
+#cv{display:block;width:100%;border-radius:14px 14px 0 0;touch-action:manipulation}
+.bar{display:flex;min-height:112px;gap:12px 20px;align-items:center;flex-wrap:wrap;
+  background:var(--card);border-top:1px solid var(--line);border-radius:0 0 13px 13px;padding:12px 16px 14px}
+.cap{flex:1 1 420px;min-width:0}
+.kick{display:block;color:var(--rj-ink);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+#cap{margin:2px 0 0;font-size:19px;line-height:1.4;font-weight:500;max-width:62ch;text-wrap:pretty}
+#cap b{font-weight:700}
+#extra:empty{display:none}
+#extra{margin-top:8px;font-size:16px;max-width:66ch}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font:600 16px/1.2 var(--font);padding:11px 16px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--fg);cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--fg)}
+.btn.primary{background:var(--rj);border-color:var(--rj);color:#fff;padding:12px 20px;font-size:17px}
+.btn.primary:hover:not(:disabled){background:#a8102a;border-color:#a8102a}
+.btn.chip{border-radius:999px;border:2px solid var(--think);background:var(--card);font-size:17px;padding:10px 20px}
+.btn.quiet{background:none;border-color:transparent;color:var(--muted);font-weight:500;font-size:14px;padding:8px 6px;text-decoration:underline}
+.btn:disabled{opacity:.5;cursor:default}
+
+.side{display:flex;flex-direction:column;gap:10px;align-items:flex-end}.side .acts{justify-content:flex-end}#ctl:empty{display:none}#ctl .dial{flex-direction:column;align-items:stretch;gap:2px}#ctl .dial .track{display:flex;align-items:center;gap:8px}#ctl .dial input[type=range]{width:min(300px,62vw)}#ctl .dial output{font-size:17px;margin-left:4px}
+@media(max-width:700px){.side{align-items:stretch;flex:1 1 100%}}
+.dial{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dial label{font-weight:700}
+.dial input[type=range]{width:min(360px,70vw);accent-color:var(--rj);height:28px}
+.dial output{font:700 18px/1 var(--font);font-variant-numeric:tabular-nums;min-width:2.6em}
+.dial .ends{color:var(--muted);font-size:14px}
+.math{font-size:18px;margin:0;font-variant-numeric:tabular-nums}
+.math b{color:var(--rj-ink)}
+.term{color:var(--muted);font-size:15px;margin:6px 0 0}
+.ans{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ans input{font:600 18px/1 var(--font);width:6.5em;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--fg)}
+.use{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.use li{background:var(--card2);border-radius:10px;padding:9px 12px;font-size:15.5px}
+.use b{color:var(--rj-ink)}
+.tell{display:grid;gap:6px;margin-top:10px}
+.tell label{font-weight:700}
+.tell textarea{font:16px/1.45 var(--font);width:100%;min-height:74px;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--fg);resize:vertical}
+.copied{color:var(--good);font-weight:700;font-size:15px}
+#copybox{width:100%;min-height:120px;font:14px/1.4 ui-monospace,Consolas,monospace;margin-top:8px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
+
+details.more{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 16px}
+details.more summary{cursor:pointer;font-weight:700;padding:12px 0}
+details.more p,details.more li{font-size:15px;max-width:74ch}
+details.more ul{padding-left:20px}
+.foot{margin-top:18px;color:var(--muted);font-size:14px;text-align:center}
+.nextlink{margin:14px 0 0}.nextlink a.btn{display:inline-block;text-decoration:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media(max-width:700px){
+  .bar{position:sticky;bottom:0;z-index:2;min-height:0;box-shadow:0 -6px 16px rgba(0,0,0,.10);padding:9px 12px 11px;gap:8px}
+  .bar.final{position:static;box-shadow:none}
+  .mast p{display:none}.mast-in{padding:7px 12px}.mast img{height:30px}
+  .wrap{padding:8px 10px 20px}.eyebrow{display:none}.top{margin-bottom:6px;gap:6px}.top h2{font-size:18px}
+  .steps button{padding:6px 9px;font-size:12px}
+  #cap{font-size:15.5px;line-height:1.35}.kick{font-size:11px}
+  .btn{padding:9px 13px;font-size:15px}.btn.primary{padding:10px 16px;font-size:16px;flex:1 1 auto}.btn.chip{font-size:16px;padding:8px 18px}
+  #extra{font-size:15px}.math{font-size:16px}.term{font-size:14px}.use li{font-size:14.5px}
+}
+
+</style>
+</head>
+<body>
+<header class="mast"><div class="mast-in">
+  <img alt="RJ" src="data:image/png;base64,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">
+  <div><h1>Raider AILab</h1><p>How AI works, and how to work with it</p></div>
+  <a href="https://rjedtech.github.io/Raider-AILab/">← All tools</a>
+</div></header>
+
+<main class="wrap">
+  <div class="top">
+    <div><p class="eyebrow">Goals shape behavior</p><h2>Score the Bot: who taught it to bluff?</h2></div>
+    <ol class="steps" id="steps" aria-label="Steps"></ol>
+  </div>
+
+  <section class="stagebox" aria-label="The model">
+    <canvas id="cv" role="img" aria-label="Ten tries at one question shown as ten tiles, right or wrong. Chips under the tiles show the points. Two score cards on the right add up the bot’s score and what you got."></canvas>
+    <div class="bar">
+      <div class="cap">
+        <span class="kick" id="kick"></span>
+        <p id="cap" aria-live="polite"></p>
+        <div id="extra"></div>
+      </div>
+      <div class="side"><div id="ctl"></div><div class="acts" id="acts"></div></div>
+    </div>
+  </section>
+
+  <details class="more">
+    <summary>For teachers: the math, the model and the sources</summary>
+    <p><b>The math.</b> Expected value (Statistics) and a linear inequality (Algebra 1): answering is worth p × R + (1 − p) × W, and the bot answers when that beats the points for “I don’t know.” With R = 1 and “I don’t know” = 0, the break-even confidence for a penalty of L points is p = L ÷ (1 + L).</p>
+    <p><b>What this toy assumes.</b> The bot is calibrated: when it is 30% sure, it is right on 3 tries in 10. Real chatbots are often more sure than they should be. A wrong answer you believe is set to cost you as much as a right one helps; in real life that cost changes with the task. The 100-question quiz has ten questions at each confidence level from 10% to 100%. All three are choices made for teaching.</p>
+    <p><b>The real research.</b> OpenAI, “Why language models hallucinate” (September 5, 2025, <a href="https://openai.com/index/why-language-models-hallucinate/">openai.com/index/why-language-models-hallucinate</a>). Its example from SimpleQA: gpt-5-thinking-mini was right 22%, wrong 26% and gave no answer 52%; o4-mini was right 24%, wrong 75% and gave no answer 1%. The authors say tests do not directly cause made-up answers, but most tests score in a way that rewards guessing over admitting uncertainty.</p>
+    <p><b>A human parallel.</b> The SAT used to take off a quarter point for each wrong answer, with five choices per question, so a blind guess netted zero on average. The redesigned SAT dropped that penalty in 2016.</p>
+    <p><b>How to use it in class.</b> It is built to run cold, and it follows Next Word. A good stopping point for discussion is step 5: which rule would you want a chatbot graded by, and who gets to choose? Answers can be copied at the end and pasted into Canvas.</p>
+  </details>
+
+  <p class="foot">RJ Ed Tech · Raider AILab · A simplified model for instruction<br>© 2026 Jason Beyer, RJ Ed Tech · <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>: free to share and adapt for non-commercial use, with credit.</p>
+</main>
+
+<script>window.NEXT_HTML='<p class="nextlink"><a class="btn" href="next-word.html">← Before this: Next Word</a> <a class="btn" href="./">All AILab tools</a></p>';</script>
+<script>
+(()=>{'use strict';
+/* ================= Score the Bot: the numbers ================= */
+const STAGES=['Pop quiz','Ten tries','Who pays','Fix the rule','Whole quiz','Formula','For real'];
+const GREEN='#1e8a4c',RED='#c93a32',GRAY='#8a8d96';
+const MODELS=[{id:'A',name:'OpenAI o4-mini',right:24,wrong:75,skip:1},{id:'B',name:'gpt-5-thinking-mini',right:22,wrong:26,skip:52}];
+/* the whole quiz: ten questions at each confidence level, 10% to 100%. At "30% sure" the bot is right on 3 of the 10. */
+function quizOutcome(Wp){const Lp=-Wp,t=Lp/(1+Lp);let right=0,wrong=0,idk=0,first=11;
+  for(let c=1;c<=10;c++){if(c/10>t+1e-9){right+=c;wrong+=10-c;if(c<first)first=c;}else idk+=10;}
+  return {t,right,wrong,idk,first,board:right,help:right-wrong};}
+
+/* ================= state ================= */
+const S={stage:0,maxStage:0,quiz:null,g2:null,played:false,k:3,sawLow:false,you:false,fix:false,evenStep:false,sawEven:false,sawAbove:false,
+  W5:0,tried5:{0:true},fstep:0,xferTries:0,xferDone:false,xferAns:null,xferRight:false,g7:null,mode7:0,explain:''};
+const V={};
+let W=0,H=0,DPR=1,C={},L={tall:false},busy=false,hits=[],tNow=0,wantFocus=false;
+const tweens=[];
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SPEED=RM?0.02:/[?&]fast=1/.test(location.search)?0.02:1;   /* ?fast=1 is for test scripts */
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d'),BAR=document.querySelector('.bar');
+const FONT=getComputedStyle(document.documentElement).getPropertyValue('--font')||'sans-serif';
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t,TAU=Math.PI*2;
+const eio=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,eout=t=>1-Math.pow(1-t,3),lin=t=>t;
+const sg=v=>(v>0?'+':v<0?'−':'')+Math.abs(v);
+function anim(dur,fn,ease){return new Promise(res=>{tweens.push({t0:performance.now(),dur:Math.max(1,dur*SPEED),fn,ease:ease||eio,res});});}
+const sleep=ms=>anim(ms,()=>{},lin);
+function stopAll(){tweens.length=0;}
+function readColors(){const cs=getComputedStyle(document.documentElement),g=n=>cs.getPropertyValue(n).trim();
+  C={fg:g('--fg'),muted:g('--muted'),line:g('--line'),card:g('--card'),card2:g('--card2'),bg:g('--cv-bg'),rj:g('--rj'),rjink:g('--rj-ink'),hl:g('--hl'),think:g('--think'),good:g('--good'),bad:g('--bad')};}
+
+/* ================= drawing helpers ================= */
+function rr(x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function text(s,x,y,o){o=o||{};ctx.font=`${o.weight||500} ${o.size||14}px ${FONT}`;ctx.textAlign=o.align||'left';ctx.textBaseline=o.base||'middle';ctx.fillStyle=o.color||C.fg;
+  if(o.alpha!=null){const a=ctx.globalAlpha;ctx.globalAlpha=a*o.alpha;ctx.fillText(s,x,y);ctx.globalAlpha=a;}else ctx.fillText(s,x,y);}
+function tw(s,size,weight){ctx.font=`${weight||500} ${size}px ${FONT}`;return ctx.measureText(s).width;}
+function wrapLines(str,maxW,size,weight){const ws=str.split(' ');const out=[];let cur='';ws.forEach(w=>{const t=cur?cur+' '+w:w;if(tw(t,size,weight)>maxW&&cur){out.push(cur);cur=w;}else cur=t;});if(cur)out.push(cur);return out;}
+function pill(s,x,y,o){o=o||{};const fs=o.size||14*L.k,w=tw(s,fs,700)+fs*1.5,h=fs*1.9;const px=o.align==='center'?x-w/2:o.align==='right'?x-w:x;
+  rr(px,y-h/2,w,h,h/2);if(o.fill){ctx.fillStyle=o.fill;ctx.fill();}if(o.stroke){ctx.strokeStyle=o.stroke;ctx.lineWidth=o.lw||2;ctx.stroke();}
+  text(s,px+w/2,y+.5,{size:fs,weight:700,color:o.color||C.fg,align:'center'});return w;}
+function chip(x,y,r,label,color,filled,alpha){ctx.save();if(alpha!=null)ctx.globalAlpha*=alpha;ctx.beginPath();ctx.arc(x,y,r,0,TAU);
+  if(filled){ctx.fillStyle=color;ctx.fill();}else{ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);}
+  if(label&&r>=7)text(label,x,y+.5,{size:r*1.02,weight:700,color:filled?'#fff':color,align:'center'});ctx.restore();}
+function card(x,y,w,h){rr(x,y,w,h,12);ctx.fillStyle=C.card;ctx.fill();ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.stroke();}
+
+/* ================= layout ================= */
+function resize(){const box=cv.parentElement;W=Math.floor(box.clientWidth);L.tall=W<700;
+  const barH=L.tall?(BAR.offsetHeight||150):126;
+  const top=cv.getBoundingClientRect().top+window.scrollY,avail=window.innerHeight-top-barH-10;
+  H=L.tall?Math.round(clamp(avail,500,680)):Math.round(clamp(Math.min(W*0.56,avail),380,620));
+  DPR=Math.min(window.devicePixelRatio||1,2.5);cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);cv.style.height=H+'px';layout();}
+function layout(){L.k=L.tall?clamp(W/400,.86,1):clamp(W/1060,.84,1.1);
+  if(L.tall){const lh=Math.round(H*0.44);L.left={x:10,y:10,w:W-20,h:lh};L.right={x:10,y:lh+18,w:W-20,h:H-lh-28};}
+  else{const lw=Math.round(W*0.645);L.left={x:20,y:14,w:lw-20,h:H-28};L.right={x:lw+16,y:14,w:W-lw-34,h:H-28};}
+  const l=L.left;L.gap=L.tall?4:7;L.ts=Math.floor(Math.min(L.tall?32:62,(l.w-9*L.gap)/10));
+  L.tx0=l.x+(l.w-(10*L.ts+9*L.gap))/2;L.ty=l.y+(L.tall?76:Math.max(96,l.h*0.25));}
+
+/* ================= scene pieces ================= */
+function drawRule(x,y,Wb,o){o=o||{};const k=L.k,fs=(L.tall?12.5:14)*k;let cx=x;
+  text(o.label||'The rule',cx,y+fs,{size:fs,weight:700,color:C.muted});cx+=tw(o.label||'The rule',fs,700)+10;
+  const items=[['right +1',GREEN,false],['wrong '+(Wb===0?'0':sg(Wb)),Wb===0?C.muted:RED,Wb!==0],[(o.blank||'“I don’t know”')+' 0',C.muted,false]];
+  items.forEach((it,i)=>{const hot=i===1&&V.rulePulse>0;const w=pill(it[0],cx,y+fs,{size:fs,stroke:it[1],color:it[1],lw:hot?2+3*V.rulePulse:it[2]?2.6:1.6,fill:it[2]?C.card:null});cx+=w+8;});}
+function drawTries(o){const n=o.n||10,ts=o.ts||L.ts,g=L.gap,k=L.k,x0=o.x0!=null?o.x0:L.tx0,y=o.y!=null?o.y:L.ty;
+  if(o.label)text(o.label,x0,y-15*k,{size:(L.tall?12.5:14.5)*k,weight:700});
+  for(let i=0;i<n;i++){const x=x0+i*(ts+g),rev=i<o.shown,right=i<o.k;
+    rr(x,y,ts,ts,Math.min(9,ts*0.16));
+    if(!rev){ctx.fillStyle=C.card2;ctx.fill();ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.stroke();text('?',x+ts/2,y+ts/2+1,{size:ts*.42,weight:700,color:C.muted,align:'center'});continue;}
+    ctx.fillStyle=right?GREEN:RED;ctx.fill();text(right?'✓':'✗',x+ts/2,y+ts/2+1,{size:ts*.5,weight:700,color:'#fff',align:'center'});
+    if(o.chips){const r=Math.min(11*k,ts*0.2),cy=y+ts+r+7;
+      if(right)chip(x+ts/2,cy,r,'+1',GREEN,true);
+      else if(!o.W)chip(x+ts/2,cy,r,'0',C.muted,false);
+      else for(let j=0;j<-o.W;j++)chip(x+ts/2,cy+j*(2*r+3),r,'−1',RED,true,o.chipA);}}
+  return {x0,y,ts};}
+/* a ledger: green chips earned, red chips lost, pairs cancel, what is left is the result */
+function ledger(x,y,w,h,o){const k=L.k;ctx.save();if(o.alpha!=null)ctx.globalAlpha*=o.alpha;card(x,y,w,h);
+  const fs=(L.tall?12.5:14.5)*k;text(o.title,x+14,y+18*k,{size:fs,weight:700});
+  if(o.sub)text(o.sub,x+14,y+18*k+fs*1.25,{size:fs*.84,color:C.muted});
+  const G=o.G,R=o.R,P=Math.round((o.pair||0)*Math.min(G,R));
+  const per=10,r=Math.min(8.5*k,(w-28-(o.net!=null?70*k:0))/per/2.5),sp=2*r+4,cx0=x+14+r,y1=y+(o.sub?58:44)*k+r;
+  for(let i=0;i<G;i++)chip(cx0+(i%per)*sp,y1+Math.floor(i/per)*sp,r,'',GREEN,true,i<P?.2:1);
+  const y2=y1+(Math.ceil(Math.max(G,1)/per))*sp+5;
+  for(let i=0;i<R;i++)chip(cx0+(i%per)*sp,y2+Math.floor(i/per)*sp,r,'',RED,true,i<P?.2:1);
+  if(!R&&o.zeroNote)text(o.zeroNote,x+14,y2+2,{size:fs*.86,color:C.muted});
+  if(P>0&&(o.pair||0)<1){ctx.strokeStyle=C.muted;ctx.lineWidth=1.2;for(let i=0;i<P;i++){ctx.beginPath();ctx.moveTo(cx0+(i%per)*sp,y1+Math.floor(i/per)*sp);ctx.lineTo(cx0+(i%per)*sp,y2+Math.floor(i/per)*sp);ctx.stroke();}}
+  const ny=y+(L.tall?50:66)*k;if(o.net!=null){const col=o.net>0?C.good:o.net<0?C.bad:C.fg;text(sg(o.net)||'0',x+w-14,ny,{size:32*k,weight:700,align:'right',color:col});
+    if(o.netLabel)text(o.netLabel,x+w-14,ny+25*k,{size:fs*.82,color:C.muted,align:'right'});}
+  else if(o.netHidden)text('?',x+w-18,ny,{size:32*k,weight:700,align:'right',color:C.muted});
+  if(o.foot){const fy=y+h-15*k;text(o.foot[0],x+14,fy,{size:fs*.9,color:C.muted,weight:600});
+    if(o.foot[1])pill(o.foot[1],x+w-12,fy,{size:fs*.86,align:'right',stroke:o.foot[2]||C.fg,color:o.foot[2]||C.fg,fill:C.card,lw:2.4});}
+  ctx.restore();}
+
+/* ================= stage 1: pop quiz ================= */
+function draw0(){const k=L.k,cw=Math.min(W-40,L.tall?W-20:620),cx=L.tall?10:lerp((W-cw)/2,Math.max(24,W*0.07),eio(V.rev||0)),cy=L.tall?10:Math.max(14,H*0.06),ch=L.tall?H*0.56:H*0.84;
+  card(cx,cy,cw,ch);text('Pop quiz · question 7 of 10',cx+20,cy+26*k,{size:13.5*k,weight:700,color:C.rjink});
+  drawRule(cx+20,cy+42*k,0,{label:'Scoring',blank:'blank'});
+  const qf=(L.tall?19:26)*k,lines=wrapLines('What is the 20th digit of π after the decimal point?',cw-44,qf,700);
+  lines.forEach((ln,i)=>text(ln,cx+20,cy+106*k+i*qf*1.3,{size:qf,weight:700}));
+  const oy=cy+106*k+lines.length*qf*1.3+18*k,os=Math.min((cw-40-4*12)/5,L.tall?58:104),oh=(L.tall?46:58)*k;
+  ['2','4','6','8','I don’t know'].forEach((lab,i)=>{const x=cx+20+i*(os+12),mine=S.quiz===lab,rev=V.rev>0,right=lab==='6';
+    rr(x,oy,os,oh,10);ctx.fillStyle=rev&&right?GREEN:C.card2;ctx.fill();ctx.strokeStyle=mine?C.think:C.line;ctx.lineWidth=mine?3.5:1.2;ctx.stroke();
+    const f=i===4?(L.tall?10.5:14.5)*k:22*k;const ls=i===4?wrapLines(lab,os-8,f,700):[lab];
+    ls.forEach((ln,j)=>text(ln,x+os/2,oy+oh/2+(j-(ls.length-1)/2)*f*1.15,{size:f,weight:700,align:'center',color:rev&&right?'#fff':C.fg}));
+    if(mine)text('your pick',x+os/2,oy+oh+13*k,{size:12*k,weight:700,color:C.think,align:'center'});
+    if(!S.quiz)hits.push({x,y:oy,w:os,h:oh,fn:()=>pickQuiz(lab)});});
+  if(V.rev>0&&S.quiz){ctx.save();ctx.globalAlpha=V.rev;const got=S.quiz==='6'?1:0;
+    text('You scored',cx+20,oy+oh+46*k,{size:14*k,color:C.muted,weight:600});
+    text(got?'+1':'0',cx+20+tw('You scored ',14*k,600)+6,oy+oh+46*k,{size:26*k,weight:700,color:got?C.good:C.fg});
+    /* a blind guess, four tries */
+    const bx=L.tall?10:cx+cw+26,by=L.tall?cy+ch+14:cy+30*k,bw=L.tall?W-20:W-bx-24;
+    if(bw>150){text('A blind guess, 4 tries',bx,by,{size:14.5*k,weight:700});
+      const ts=Math.min(46,(bw-18)/4-8);drawTries({n:4,k:1,shown:4,chips:true,W:0,x0:bx,y:by+16*k,ts});
+      const yy=by+16*k+ts+52*k;text('guess: +1 per 4 tries',bx,yy,{size:14*k,weight:700,color:C.good});text('blank: 0 per 4 tries',bx,yy+22*k,{size:14*k,weight:700,color:C.muted});}
+    ctx.restore();}}
+
+/* ================= stages 2 to 4 and 6: ten tries ================= */
+function drawTriesScene(){const st=S.stage,k=L.k,Wb=st===3?(S.fix?-1:0):st===5?-1:0,kk=S.k,l=L.left,r=L.right;
+  const mainA=V.mainA==null?1:V.mainA;ctx.save();ctx.globalAlpha=mainA;
+  drawRule(l.x,l.y,Wb);
+  const shown=V.shown==null?10:V.shown;
+  drawTries({k:kk,W:Wb,shown,chips:true,chipA:V.chipA,label:'One question, 10 tries · the bot is '+kk*10+'% sure'});
+  /* formula stage: say the row in numbers */
+  if(st===5&&V.fr>0){ctx.save();ctx.globalAlpha=mainA*V.fr;const ts=L.ts,g=L.gap,y=L.ty+ts+(L.tall?46:60)*k,xa=L.tx0,xb=L.tx0+kk*(ts+g)-g,xc=xb+g,xd=L.tx0+10*(ts+g)-g;
+    const br=(x0,x1,col,lab)=>{ctx.strokeStyle=col;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(x0,y);ctx.lineTo(x0,y+7);ctx.lineTo(x1,y+7);ctx.lineTo(x1,y);ctx.stroke();text(lab,(x0+x1)/2,y+24*k,{size:(L.tall?12:15)*k,weight:700,align:'center',color:col});};
+    br(xa,xb,GREEN,'3 × (+1) = +3');br(xc,xd,RED,'7 × (−1) = −7');
+    text('+3 − 7 = −4.  Less than 0, so “I don’t know” wins.',l.x+l.w/2,y+60*k,{size:(L.tall?13.5:18)*k,weight:700,align:'center'});
+    text('p × (+1) + (1 − p) × (−1) > 0   gives   p > ½',l.x+l.w/2,y+98*k,{size:(L.tall?13.5:19)*k,weight:700,align:'center',color:C.rjink});ctx.restore();}
+  if(st!==5){const tgt=shown>=10?kk-(10-kk)*(-Wb):Math.min(kk,shown)-Math.max(0,shown-kk)*(-Wb);if(V.mk==null)V.mk=tgt;V.mk+=(tgt-V.mk)*(RM?1:.22);
+    const x0=l.x+(L.tall?14:34),x1=l.x+l.w-(L.tall?14:34),ny=L.ty+L.ts+(L.tall?70:96)*k,X=v=>lerp(x0,x1,(v+10)/20),fsn=(L.tall?11:13)*k;
+    text('points per 10 tries',x0,ny+(L.tall?34:40)*k,{size:fsn,weight:700,color:C.muted});
+    ctx.strokeStyle=C.muted;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x0,ny);ctx.lineTo(x1,ny);ctx.stroke();
+    for(let v=-10;v<=10;v+=1){const big=v%5===0;ctx.lineWidth=big?2:1;ctx.beginPath();ctx.moveTo(X(v),ny-(big?6:3));ctx.lineTo(X(v),ny+(big?6:3));ctx.stroke();if(big&&v)text(sg(v),X(v),ny+18*k,{size:fsn,color:C.muted,align:'center'});}
+    /* "I don't know" always scores 0 */
+    ctx.fillStyle=GRAY;ctx.beginPath();ctx.arc(X(0),ny,7,0,TAU);ctx.fill();text('“I don’t know” = 0',X(0),ny+20*k,{size:fsn,weight:700,align:'center'});
+    if(shown>0){const mv=V.mk,col=mv>0.05?GREEN:mv<-0.05?RED:C.fg,mx=X(mv);ctx.fillStyle=col;ctx.beginPath();ctx.arc(mx,ny,10,0,TAU);ctx.fill();ctx.strokeStyle=C.bg;ctx.lineWidth=2;ctx.stroke();
+      const lab='answering = '+sg(Math.round(mv)),lw2=tw(lab,fsn*1.08,700),lx=clamp(mx,x0+lw2/2,x1-lw2/2);text(lab,lx,ny-19*k,{size:fsn*1.08,weight:700,align:'center',color:col==='#1e8a4c'?C.good:col===RED?C.bad:C.fg});
+      if(shown>=10){const win=tgt>0?mx:tgt<0?X(0):null;if(win!=null){const up=tgt>0;pill('the bot picks this',clamp(win,x0+70*k,x1-70*k),up?ny-(L.tall?40:44)*k:ny+(L.tall?40:44)*k,{size:fsn*.95,align:'center',fill:C.fg,color:C.bg});}}}}
+  /* the guess from step 2, checked on the scene */
+  if(st===1&&S.g2&&V.badge>0){const ok=S.g2==='never',lab='your guess: '+(S.g2==='never'?'no, never':S.g2==='50'?'yes, under 50%':'yes, under 25%')+(ok?'  ✓':'  ✗');
+    ctx.globalAlpha=mainA*V.badge;pill(lab,l.x+l.w,l.y+(L.tall?12.5:14)*k,{size:13.5*k,align:'right',stroke:C.think,color:C.think,lw:2});ctx.globalAlpha=mainA;}
+  /* ledgers */
+  const hasYou=st>=2,gp=10,hb=hasYou?(r.h-gp)/2:Math.min(r.h,230*k);
+  const G=Math.min(kk,shown),Rw=Math.max(0,shown-kk),Rb=Rw*(-Wb),netB=G-Rb;
+  const move=netB>0?['ANSWER',C.good]:netB<0?['“I DON’T KNOW”',C.fg]:['A TIE',C.fg];
+  ledger(r.x,r.y,r.w,hb,{title:'The bot’s score',sub:Wb?'right +1, wrong '+sg(Wb):'right +1, wrong 0',G,R:Rb,pair:V.pairBot==null?1:V.pairBot,net:shown>=10?netB:null,netHidden:shown<10,netLabel:'per 10 tries',
+    zeroNote:shown>kk?'wrong answers cost it nothing':'',foot:shown>=10?['best move for the bot',move[0],move[1]]:null});
+  if(hasYou){const yin=V.youIn==null?1:V.youIn,cnt=Math.round(yin*10),Gy=Math.min(kk,cnt),Ry=Math.max(0,cnt-kk);
+    ledger(r.x,r.y+hb+gp,r.w,hb,{title:'What you got',sub:'right helps you 1, wrong costs you 1',G:Gy,R:Ry,pair:V.pairYou==null?1:V.pairYou,net:(V.pairYou==null||V.pairYou>=1)&&yin>=1?kk-(10-kk):null,netHidden:true,netLabel:'per 10 answers',
+      foot:(st===3&&S.fix&&(V.pairBot==null||V.pairBot>=1))?['same number as the bot’s score',null]:null});}
+  ctx.restore();
+  if(st===5&&V.sym>0)drawXfer(V.sym);}
+function drawXfer(a){const k=L.k,cx=W/2;ctx.save();ctx.globalAlpha=a;
+  text('a new rule',cx,H*0.12,{size:14*k,weight:700,color:C.muted,align:'center'});
+  const fs=(L.tall?13:16)*k;let x=cx-(tw('right +1',fs,700)+tw('wrong −3',fs,700)+tw('“I don’t know” 0',fs,700)+fs*4.5+16)/2;
+  [['right +1',GREEN,false],['wrong −3',RED,true],['“I don’t know” 0',C.muted,false]].forEach(it=>{x+=pill(it[0],x,H*0.21,{size:fs,stroke:it[1],color:it[1],lw:it[2]?2.6:1.6})+8;});
+  text('How sure before answering pays?  p = '+(S.xferDone?'3 ÷ (1 + 3) = 75%':'?'),cx,H*0.36,{size:(L.tall?16:24)*k,weight:700,align:'center',color:C.rjink});
+  if(V.help>0){ctx.globalAlpha=a*V.help;const ts=L.tall?40:56,g=8,x0=cx-(4*ts+3*g)/2,y=H*0.48;
+    drawTries({n:4,k:3,shown:4,chips:true,W:-3,x0,y,ts});
+    text('3 right (+3) pay for 1 wrong (−3): a tie at 3 right in 4',cx,y+ts+(L.tall?92:104)*k,{size:(L.tall?12.5:15.5)*k,weight:700,align:'center'});}
+  ctx.restore();}
+
+/* ================= stage 5: the whole quiz ================= */
+function drawQuiz(){const k=L.k,l=L.left,r=L.right,o=quizOutcome(S.W5);
+  drawRule(l.x,l.y,S.W5);
+  const g=3,ch=Math.floor((l.h-(L.tall?96:118)*k)/10)-g,cw=Math.floor(Math.min(L.tall?30:62,(l.w-(L.tall?10:50))/10-g)),cs=cw,gw=10*(cw+g)-g,gh0=10*(ch+g)-g,x0=l.x+Math.max(4,(l.w-gw)/2),y0=l.y+(L.tall?56:72)*k;
+  text('100 questions, sorted by how sure the bot is',x0,y0-14*k,{size:(L.tall?12:14.5)*k,weight:700});
+  const cut=V.cut==null?o.first:V.cut;   /* first answered column (1 to 11), animated */
+  for(let c=1;c<=10;c++){const x=x0+(c-1)*(cw+g),ans=c>=cut-1e-6,part=clamp(c-cut+1,0,1);
+    for(let j=0;j<10;j++){const y=y0+(9-j)*(ch+g),right=j<c;rr(x,y,cw,ch,Math.min(5,ch*.2));
+      ctx.fillStyle=right?GREEN:RED;ctx.globalAlpha=ans?1:part;ctx.fill();ctx.globalAlpha=1;
+      if(!ans){ctx.fillStyle=GRAY;ctx.globalAlpha=(1-part)*.45;ctx.fill();ctx.globalAlpha=1;}
+      else if(ch>=18&&cw>=30)text(right?'✓':'✗',x+cw/2,y+ch/2+.5,{size:ch*.5,weight:700,color:'#fff',align:'center',alpha:.85});}
+    text(c*10+'%',x+cw/2,y0+gh0+13*k,{size:(L.tall?9.5:12.5)*k,color:C.muted,align:'center',weight:600});}
+  text('how sure the bot is →',x0,y0+gh0+32*k,{size:(L.tall?11:13)*k,color:C.muted});
+  /* the line the rule draws */
+  const lx=x0+(cut-1)*(cs+g)-g/2-(cut<=1?4:0);ctx.strokeStyle=C.fg;ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(lx,y0-6);ctx.lineTo(lx,y0+gh0+4);ctx.stroke();
+  if(o.first>1){const mid=x0+((o.first-1)*(cs+g))/2;text('“I don’t know”',mid,y0+gh0/2-9*k,{size:(L.tall?11:14)*k,weight:700,align:'center'});text(o.idk+' questions',mid,y0+gh0/2+10*k,{size:(L.tall?10.5:13)*k,align:'center',weight:600});}
+  /* scoreboards */
+  const bh=Math.min(104*k,(r.h-(L.tall?70:150)*k)/2-8);
+  const sb=(y,title,sub,val,col,hot)=>{card(r.x,y,r.w,bh);if(hot){rr(r.x,y,r.w,bh,12);ctx.strokeStyle=col;ctx.lineWidth=3;ctx.stroke();}
+    text(title,r.x+14,y+20*k,{size:(L.tall?12.5:14.5)*k,weight:700});text(sub,r.x+14,y+20*k+18*k,{size:(L.tall?11:12.5)*k,color:C.muted});
+    text(val,r.x+r.w-14,y+bh/2+4,{size:Math.min(40*k,bh*.46),weight:700,align:'right',color:col});};
+  sb(r.y,'Leaderboard','counts right answers only',String(o.board),C.fg,false);
+  sb(r.y+bh+8,'Help to you','right minus wrong',sg(o.help),C.good,o.help===30);
+  const cy=r.y+2*bh+8+20*k;text('✓ '+o.right+' right',r.x+4,cy,{size:13.5*k,weight:700,color:C.good});text('✗ '+o.wrong+' wrong',r.x+r.w*0.36,cy,{size:13.5*k,weight:700,color:C.bad});text(o.idk+' “I don’t know”',r.x+r.w,cy,{size:13.5*k,weight:700,align:'right',color:C.muted});
+  /* the chart the student builds by trying rules */
+  if(!L.tall){const gy=cy+26*k,gh=r.y+r.h-gy-52*k;if(gh>46){text('Rules you have tried',r.x+4,gy,{size:13*k,weight:700});
+    const bw=(r.w-8)/5,base=gy+16*k+gh;ctx.strokeStyle=C.line;ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(r.x,base);ctx.lineTo(r.x+r.w,base);ctx.stroke();
+    [0,-1,-2,-3,-4].forEach((wv,i)=>{const x=r.x+4+i*bw,q=quizOutcome(wv),on=S.tried5[wv],cur=wv===S.W5;
+      text('wrong '+(wv?sg(wv):'0'),x+bw/2-4,base+13*k,{size:11.5*k,align:'center',color:cur?C.fg:C.muted,weight:cur?700:500});
+      if(!on){text('?',x+bw/2-4,base-14*k,{size:15*k,color:C.muted,align:'center',weight:700});return;}
+      const h1=gh*q.board/60,h2=gh*q.help/60,w2=(bw-14)/2;
+      rr(x,base-h1,w2,h1,3);ctx.fillStyle=GRAY;ctx.fill();rr(x+w2+2,base-h2,w2,h2,3);ctx.fillStyle=GREEN;ctx.fill();
+      text(String(q.board),x+w2/2,base-h1-8*k,{size:11*k,align:'center',color:C.muted,weight:700});text(sg(q.help),x+w2+2+w2/2,base-h2-8*k,{size:11*k,align:'center',color:C.good,weight:700});
+      if(cur){ctx.strokeStyle=C.fg;ctx.lineWidth=2;rr(x-3,gy+10*k,bw-6,gh+12*k,5);ctx.stroke();}});
+    text('gray: leaderboard   green: help to you',r.x+4,base+30*k,{size:11.5*k,color:C.muted});}}}
+
+/* ================= stage 7: two real models ================= */
+function drawReal(){const k=L.k,m=S.mode7,score=md=>m===0?md.right:md.right-md.wrong,sA=score(MODELS[0]),sB=score(MODELS[1]),g=2;
+  const grid=(md,x0,y0,cs)=>{for(let i=0;i<100;i++){const x=x0+(i%10)*(cs+g),y=y0+Math.floor(i/10)*(cs+g);rr(x,y,cs,cs,Math.min(4,cs*.2));ctx.fillStyle=i<md.right?GREEN:i<md.right+md.wrong?RED:GRAY;ctx.globalAlpha=i<md.right+md.wrong?1:.45;ctx.fill();ctx.globalAlpha=1;}};
+  if(L.tall){const gapX=14,cs=Math.floor((W-20-gapX)/20)-g,gridW=10*(cs+g)-g,x00=(W-2*gridW-gapX)/2,y0=62*k;
+    text('Same questions, two models (per 100)',W/2,20*k,{size:12*k,weight:700,align:'center'});
+    MODELS.forEach((md,mi)=>{const x0=x00+mi*(gridW+gapX),win=V.scoreA>0&&(mi===0?sA>sB:sB>sA);text('Model '+md.id,x0,y0-18*k,{size:15*k,weight:700});grid(md,x0,y0,cs);
+      const yy=y0+gridW+18*k;text('\u2713 '+md.right,x0,yy,{size:13*k,weight:700,color:C.good});text('\u2717 '+md.wrong,x0+gridW/2,yy,{size:13*k,weight:700,color:C.bad,align:'center'});text(md.skip+' none',x0+gridW,yy,{size:13*k,weight:700,color:C.muted,align:'right'});
+      if(V.scoreA>0){ctx.save();ctx.globalAlpha=V.scoreA;const sc=score(md);text(m===0?'right: '+sc:md.right+' \u2212 '+md.wrong+' = '+sg(sc),x0,yy+26*k,{size:16*k,weight:700,color:m===0?C.fg:(sc<0?C.bad:C.good)});if(win)pill('ranks higher',x0,yy+54*k,{size:12.5*k,fill:C.rj,color:'#fff'});ctx.restore();}});return;}
+  const top=58*k,gs=Math.min(H-top-22,(W-80)/2-210*k),cs=Math.floor(gs/10)-g,gridW=10*(cs+g)-g,info=200*k,gapX=Math.max(24,Math.min(70,W-60-2*(gridW+info+18))),tot=2*(gridW+18+info)+gapX,x00=(W-tot)/2,y0=top;
+  text('Same hard fact questions, two models (results per 100 questions)',x00,24*k,{size:15*k,weight:700});
+  MODELS.forEach((md,mi)=>{const x0=x00+mi*(gridW+18+info+gapX),win=V.scoreA>0&&(mi===0?sA>sB:sB>sA),ix=x0+gridW+18;
+    grid(md,x0,y0,cs);
+    if(win){ctx.save();ctx.globalAlpha=V.scoreA;rr(x0-7,y0-7,gridW+14,gridW+14,10);ctx.strokeStyle=C.rj;ctx.lineWidth=3.5;ctx.stroke();ctx.restore();}
+    text('Model '+md.id,ix,y0+12*k,{size:19*k,weight:700});text(md.name,ix,y0+34*k,{size:12.5*k,color:C.muted});
+    const ly=y0+66*k,lh=25*k;text('\u2713 '+md.right+' right',ix,ly,{size:15*k,weight:700,color:C.good});text('\u2717 '+md.wrong+' wrong',ix,ly+lh,{size:15*k,weight:700,color:C.bad});text(md.skip+' no answer',ix,ly+2*lh,{size:15*k,weight:700,color:C.muted});
+    if(V.scoreA>0){ctx.save();ctx.globalAlpha=V.scoreA;const sc=score(md),y2=ly+3*lh+16*k;
+      text(m===0?'right answers only':'right minus wrong',ix,y2,{size:13*k,color:C.muted,weight:600});
+      text(m===0?String(sc):md.right+' \u2212 '+md.wrong+' = '+sg(sc),ix,y2+30*k,{size:(m===0?34:25)*k,weight:700,color:m===0?C.fg:(sc<0?C.bad:C.good)});
+      if(win)pill('ranks higher',ix,y2+66*k,{size:13.5*k,fill:C.rj,color:'#fff'});ctx.restore();}});
+  if(S.g7&&V.scoreA>0&&m===0){const lab='your guess: Model '+S.g7+(S.g7==='A'?'  \u2713':'  \u2717');ctx.globalAlpha=V.scoreA;pill(lab,x00+tot,24*k,{size:13.5*k,align:'right',stroke:C.think,color:C.think,lw:2});ctx.globalAlpha=1;}}
+
+/* ================= loop ================= */
+function draw(){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,W,H);hits=[];const st=S.stage;
+  if(st===0)draw0();else if(st===4)drawQuiz();else if(st===6)drawReal();else drawTriesScene();}
+let frame=0;
+function tick(now){tNow=now;if(frame++%45===0)readColors();
+  for(let i=tweens.length-1;i>=0;i--){const t=tweens[i],p=clamp((now-t.t0)/t.dur,0,1);t.fn(t.ease(p));if(p>=1){tweens.splice(i,1);t.res();}}
+  draw();requestAnimationFrame(tick);}
+
+/* ================= stage logic ================= */
+function enter(n){stopAll();busy=false;for(const k in V)delete V[k];
+  if(n===0)V.rev=S.quiz?1:0;
+  if(n===1){if(!S.played)S.k=3;V.shown=S.played?10:0;V.badge=S.sawLow?1:0;}
+  if(n===2){S.k=3;V.youIn=S.you?1:0;V.pairYou=S.you?1:0;}
+  if(n===3){if(!S.evenStep)S.k=3;}
+  if(n===4){V.cut=quizOutcome(S.W5).first;}
+  if(n===5){S.k=3;V.fr=S.fstep>=1?1:0;V.mainA=S.fstep>=2?0:1;V.sym=S.fstep>=2?1:0;V.help=S.fstep>=2&&S.xferTries>=1?1:0;}
+  if(n===6){V.scoreA=S.g7?1:0;}}
+function alignView(soft){try{const r=cv.getBoundingClientRect();if(L.tall){const bar=BAR;if(bar.classList.contains('final'))return;const barH=bar.offsetHeight,want=Math.max(0,r.top+window.scrollY+H-(window.innerHeight-barH)+4);if(!soft||Math.abs(want-window.scrollY)>6)window.scrollTo({top:want,behavior:RM?'auto':'smooth'});}
+  else if(!soft&&(r.top<0||r.bottom>window.innerHeight+140)){window.scrollTo({top:Math.max(0,r.top+window.scrollY-8),behavior:RM?'auto':'smooth'});}}catch(e){}}
+function go(n){S.stage=n;S.maxStage=Math.max(S.maxStage,n);enter(n);steps();ui();alignView();}
+
+async function pickQuiz(v){if(busy||S.quiz)return;S.quiz=v;busy=true;ui();await anim(600,p=>V.rev=p);busy=false;ui();}
+function pickG2(v){if(S.g2)return;S.g2=v;ui();}
+async function playTen(){if(busy)return;busy=true;ui();for(let i=1;i<=10;i++){V.shown=i;await sleep(170);}S.played=true;busy=false;ui();}
+function setK(v){S.k=v;const st=S.stage;
+  if(st===1){if(v<=1&&!S.sawLow){S.sawLow=true;anim(350,p=>V.badge=p);}setCap(cap1());if(S.sawLow)refreshActs();}
+  if(st===3){if(v===5)S.sawEven=true;if(v>5)S.sawAbove=true;setCap(cap3b());refreshActs();}}
+async function addYou(){if(busy)return;busy=true;ui();await anim(900,p=>V.youIn=p,lin);await sleep(250);await anim(1100,p=>V.pairYou=p,lin);S.you=true;busy=false;ui();}
+async function fixRule(){if(busy)return;busy=true;S.fix=true;V.pairBot=0;V.chipA=0;ui();await anim(500,p=>{V.rulePulse=Math.sin(Math.PI*p);V.chipA=p;});V.rulePulse=0;await sleep(250);await anim(1100,p=>V.pairBot=p,lin);busy=false;ui();}
+function evenStep(){S.evenStep=true;ui();const el=$('conf');if(el)el.focus({preventScroll:true});}
+async function setW5(v){S.W5=v;S.tried5[v]=true;const to=quizOutcome(v).first,from=V.cut==null?to:V.cut;setCap(cap4());refreshActs();stopAll();await anim(450,p=>V.cut=lerp(from,to,p));}
+async function showMath(){if(busy)return;busy=true;ui();await anim(700,p=>V.fr=p);S.fstep=1;busy=false;ui();}
+async function tryOne(){if(busy)return;busy=true;S.fstep=2;ui();await anim(400,p=>V.mainA=1-p);await anim(400,p=>V.sym=p);busy=false;ui();const el=$('xfer');if(el)el.focus();}
+async function checkXfer(){if(S.xferDone)return;const el=$('xfer'),v=parseFloat(String(el.value).replace('%','').trim());if(isNaN(v)){setCap('Type a number, like 40.');return;}
+  S.xferTries++;if(S.xferAns==null)S.xferAns=v;const right=Math.abs(v-75)<0.6||Math.abs(v-0.75)<0.006;
+  if(right||S.xferTries>=2){S.xferDone=true;S.xferRight=right;await anim(300,p=>V.help=Math.max(V.help||0,p));ui();}
+  else{await anim(400,p=>V.help=p);ui();const e2=$('xfer');if(e2){e2.value='';e2.focus();}}}
+async function pickG7(v){if(busy||S.g7)return;S.g7=v;busy=true;ui();await anim(500,p=>V.scoreA=p);busy=false;ui();}
+async function flip7(){if(busy)return;busy=true;ui();await anim(250,p=>V.scoreA=1-p);S.mode7=1;await anim(450,p=>V.scoreA=p);busy=false;ui();}
+
+/* ================= captions ================= */
+function setCap(html){$('cap').innerHTML=html;}
+function cap1(){const k=S.k;if(k<=1)return 'Even at 10% sure, one lucky try in ten beats zero. <b>Under this rule the bot should always answer.</b> Bluffing is the winning move.';
+  if(S.sawLow)return k+' right in 10: '+k+' points. “I don’t know”: 0. Any guess beats it.';
+  return k+' right, '+(10-k)+' wrong: '+k+' points. “I don’t know” scores 0. <b>Slide its confidence down. Can you make “I don’t know” win?</b>';}
+function cap3b(){const k=S.k,net=2*k-10;if(k<5)return k+' right, '+(10-k)+' wrong: net '+sg(net)+'. “I don’t know” still wins. <b>Keep sliding up.</b>';
+  if(k===5)return '5 right cancel 5 wrong: zero, a tie with “I don’t know.” <b>50% is the break-even point.</b>'+(S.sawAbove?'':' Go one more.');
+  return k+' right, '+(10-k)+' wrong: net '+sg(net)+'. <b>Above 50% sure, answering pays, so it answers.</b>';}
+function cap4(){const o=quizOutcome(S.W5),n=Object.keys(S.tried5).length;
+  const tail=(n>=3&&S.tried5[-1])?' <b>The leaderboard peaked at 55, when the bot bluffed on everything.</b>':'';
+  if(S.W5===0)return n<2?'100 questions, from ones the bot barely knows to ones it is sure of. Wrong costs 0, so it answers all 100. <b>Find the rule that helps you most.</b>':'Wrong costs 0: it answers all 100. 55 right, 45 wrong. Help to you: +10.'+tail;
+  if(S.W5===-1)return 'More than 50% sure, or it says “I don’t know”: 40 right, 10 wrong. <b>Help to you: +30, the most this bot can give.</b>'+tail;
+  return 'More than '+Math.round(o.t*100)+'% sure, or “I don’t know”: '+o.right+' right, '+o.wrong+' wrong. Help: '+sg(o.help)+'. Too strict: it skips questions it would usually get right.'+tail;}
+function steps(){const ol=$('steps');ol.innerHTML='';STAGES.forEach((nm,i)=>{const li=document.createElement('li'),b=document.createElement('button');b.type='button';
+  b.innerHTML='<span class="n">'+(i+1)+'</span><span class="t"> '+nm+'</span>';b.setAttribute('aria-label','Step '+(i+1)+': '+nm);
+  if(i===S.stage)b.setAttribute('aria-current','step');if(i<=S.maxStage)b.className='done';else b.disabled=true;b.addEventListener('click',()=>{if(i!==S.stage)go(i);});li.appendChild(b);ol.appendChild(li);});}
+let lastActs=null;
+function renderActs(acts){lastActs=acts;if($('acts').contains(document.activeElement))wantFocus=true;const a=$('acts');a.innerHTML='';let first=null;
+  (acts||[]).forEach(b=>{const el=document.createElement('button');el.type='button';el.className='btn'+(b.primary?' primary':'')+(b.chip?' chip':'')+(b.quiet?' quiet':'');el.textContent=b.label;el.disabled=!!busy||!!b.disabled;el.addEventListener('click',b.fn);a.appendChild(el);if(b.primary&&!first)first=el;});
+  const tgt=first||a.querySelector('.btn');if(wantFocus&&tgt&&!tgt.disabled){tgt.focus({preventScroll:true});wantFocus=false;}}
+function refreshActs(){renderActs(actsFor());}
+function bar(o){$('kick').textContent='Step '+(S.stage+1)+' of '+STAGES.length+' · '+STAGES[S.stage];setCap(o.cap);
+  if($('extra').dataset.key!==o.extraKey){$('extra').innerHTML=o.extra||'';$('extra').dataset.key=o.extraKey||'';if(o.wire)o.wire();}
+  if($('ctl').dataset.key!==(o.ctlKey||'')){$('ctl').innerHTML=o.ctl||'';$('ctl').dataset.key=o.ctlKey||'';if(o.wireCtl)o.wireCtl();}
+  renderActs(o.acts);BAR.classList.toggle('final',S.stage===6&&S.mode7===1);if(L.tall&&W)alignView(true);}
+const next=label=>({label,primary:true,fn:()=>go(S.stage+1)});
+const skip=()=>({label:'Skip this step',quiet:true,fn:()=>go(S.stage+1)});
+function slider(id,label,min,max,val,lo,hi,fmt){return '<div class="dial"><label for="'+id+'">'+label+' <output id="'+id+'o" for="'+id+'">'+fmt(val)+'</output></label><div class="track"><span class="ends">'+lo+'</span><input id="'+id+'" type="range" min="'+min+'" max="'+max+'" step="1" value="'+val+'"><span class="ends">'+hi+'</span></div></div>';}
+const confCtl=()=>({ctlKey:'conf'+S.stage,ctl:slider('conf','How sure is the bot?',1,10,S.k,'10%','100%',v=>v*10+'%'),wireCtl:()=>{$('conf').addEventListener('input',e=>{const v=+e.target.value;$('confo').textContent=v*10+'%';setK(v);});}});
+function actsFor(){const st=S.stage;
+  if(st===1&&S.played)return [S.sawLow?next('Who pays for the wrong ones?'):{label:'Who pays for the wrong ones?',fn:()=>go(2)}];
+  if(st===3&&S.evenStep)return [(S.sawEven&&S.sawAbove)?next('Try it on a whole quiz'):{label:'Try it on a whole quiz',fn:()=>go(4)}];
+  if(st===4)return [(S.tried5[-1]&&Object.keys(S.tried5).length>=3)?next('The math behind it'):{label:'The math behind it',fn:()=>go(5)}];
+  return lastActs;}
+function ui(){const st=S.stage;let o={cap:'',extra:'',extraKey:'s'+st,acts:[]};
+  if(st===0){if(!S.quiz)o={cap:'The bot said 3:30 when it could have said “I’m not sure.” Why? <b>First, a quiz question you can’t know. What do you do?</b>',extraKey:'0',acts:['2','4','6','8','I don’t know'].map(v=>({label:v,chip:true,fn:()=>pickQuiz(v)}))};
+    else{const c=S.quiz==='I don’t know'?'Honest. It also gave up a 1-in-4 shot at a free point. <b>Under this rule, honesty scores the same as being wrong.</b>':S.quiz==='6'?'You guessed, and it landed: +1. A guess could not hurt you, so <b>guessing was the smart move.</b>':'You guessed. It cost you nothing, so <b>guessing was the smart move.</b> The answer is 6.';
+      o={cap:c,extraKey:'0',acts:[next('Now grade a bot this way')]};}}
+  if(st===1){if(!S.g2)o={cap:'A bot is tested the same way: right +1, wrong 0, “I don’t know” 0. <b>Is there any point where “I don’t know” scores more than a guess?</b>',extraKey:'1a',acts:[{label:'Yes, when it is under 50% sure',chip:true,fn:()=>pickG2('50')},{label:'Yes, under 25% sure',chip:true,fn:()=>pickG2('25')},{label:'No, never',chip:true,fn:()=>pickG2('never')}]};
+    else if(!S.played)o={cap:'Check it. Say the bot is 30% sure of an answer. Give it the same question 10 times.',extraKey:'1a',acts:[{label:'Play 10 tries',primary:true,fn:playTen}]};
+    else o=Object.assign({cap:cap1(),extraKey:'1b',acts:[]},confCtl());
+    if(S.played)o.acts=(lastActs=null,actsFor());}
+  if(st===2){if(!S.you)o={cap:'Those 7 wrong answers went to you, written just as confidently as the 3 right ones. Say a right answer helps you 1, and a wrong one you believe costs you 1.',extraKey:'2',acts:[{label:'Add up your side',primary:true,fn:addYou}]};
+    else o={cap:'3 helped, 7 hurt: you end <b>4 behind</b>. The bot still scored +3. <b>Its score never counted what the wrong answers cost you.</b>',extraKey:'2',acts:[next('Fix the rule')]};}
+  if(st===3){if(!S.fix)o={cap:'You write the rule now. <b>Take away a point for every wrong answer.</b>',extraKey:'3a',acts:[{label:'Make a wrong answer cost 1',primary:true,fn:fixRule}]};
+    else if(!S.evenStep)o={cap:'Now the bot’s score matches your result: −4. At 30% sure, “I don’t know” (0) beats answering. <b>It stops bluffing.</b>',extraKey:'3a',acts:[{label:'How sure before it answers?',primary:true,fn:evenStep}]};
+    else{o=Object.assign({cap:S.sawEven||S.sawAbove||S.k!==3?cap3b():'Slide its confidence up. <b>Where does answering start to pay again?</b>',extraKey:'3b',acts:[]},confCtl());o.acts=(lastActs=null,actsFor());}}
+  if(st===4){o={cap:cap4(),extraKey:'4',ctlKey:'pen',ctl:slider('pen','Points for a wrong answer:',-4,0,S.W5,'−4','0',v=>v==0?'0':sg(+v)),wireCtl:()=>{$('pen').addEventListener('input',e=>{const v=+e.target.value;$('peno').textContent=v===0?'0':sg(v);setW5(v);});},acts:[]};o.acts=(lastActs=null,actsFor());}
+  if(st===5){if(S.fstep===0)o={cap:'Back to 30% sure with the new rule. Now say what you did with symbols.',extraKey:'5a',acts:[{label:'Show the math',primary:true,fn:showMath}]};
+    else if(S.fstep===1)o={cap:'Answering is worth (chance right × points for right) + (chance wrong × points for wrong). The bot answers when that beats “I don’t know.” Call the chance of being right <b>p</b>.',extraKey:'5b',extra:'<p class="term">With a penalty of L points, the break-even point is <b>p = L ÷ (1 + L)</b>. Statistics calls this average over many tries the expected value.</p>',acts:[{label:'Try one without tiles',primary:true,fn:tryOne}]};
+    else if(!S.xferDone)o={cap:S.xferTries?'Not yet. One wrong answer now costs 3. How many right answers does it take to pay for it? Out of how many tries?':'New rule: right +1, wrong −3, “I don’t know” 0. <b>How sure must the bot be before answering pays?</b>',extraKey:'5c',extra:'<div class="ans"><label for="xfer" class="sr">Your answer, in percent</label><input id="xfer" inputmode="decimal" autocomplete="off" placeholder="%"><button type="button" class="btn primary" id="xcheck">Check</button></div>',
+      wire:()=>{$('xcheck').addEventListener('click',checkXfer);$('xfer').addEventListener('keydown',e=>{if(e.key==='Enter')checkXfer();});},acts:[skip()]};
+    else o={cap:(S.xferRight?'Right. ':'')+'3 ÷ (1 + 3) = <b>75%</b>. Three right answers pay for one wrong one, so it needs 3 in 4.',extraKey:'5d',acts:[next('Now two real chatbots')]};}
+  if(st===6){if(!S.g7)o={cap:'OpenAI tested two of its own models on the same hard fact questions. <b>A leaderboard counts only right answers. Which model ranks higher?</b>',extraKey:'6a',acts:[{label:'Model A',chip:true,fn:()=>pickG7('A')},{label:'Model B',chip:true,fn:()=>pickG7('B')}]};
+    else if(S.mode7===0)o={cap:'Model A ranks higher, 24 to 22. Now look at the red: <b>it was wrong 75 times in 100.</b> Model B gave no answer 52 times.',extraKey:'6a',acts:[{label:'Score them your way: right minus wrong',primary:true,fn:flip7}]};
+    else o={cap:'Change the rule and the ranking flips: −4 beats −51. <b>OpenAI’s researchers argue that right-answers-only leaderboards teach chatbots to bluff</b>, and that changing the scoring is the fix. Model B is the newer one.',extraKey:'6z',extra:finalHTML(),wire:wireFinal,acts:[{label:'Start over',fn:resetAll}]};}
+  bar(o);}
+function finalHTML(){return '<ul class="use">'
+  +'<li><b>Do:</b> tell it “If you are not sure, say so.” <b>Why:</b> you just changed the rule for this answer. A bluff is less likely. It is still possible.</li>'
+  +'<li><b>Do:</b> read a confident tone as style, not proof. <b>Why:</b> a wrong answer is written in the same sure voice as a right one. Check what matters against the source.</li></ul>'
+  +'<div class="tell"><label for="tell">Why would a chatbot make up an answer instead of saying “I don’t know”? Two sentences.</label><textarea id="tell" placeholder="Write it in your own words.">'+esc(S.explain)+'</textarea>'
+  +'<div class="acts"><button type="button" class="btn primary" id="copy">Copy my answers for Canvas</button><span class="copied" id="copied" role="status"></span></div></div>'
+  +(window.NEXT_HTML||'');}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function answersText(){const g2={'50':'yes, under 50% sure','25':'yes, under 25% sure','never':'no, never'};
+  return ['Raider AILab: Score the Bot','1. Pop quiz (wrong costs 0): I chose '+(S.quiz||'(skipped)')+'.',
+   '2. Is there a point where "I don\'t know" scores more than a guess? My guess: '+(S.g2?g2[S.g2]:'(skipped)')+'. Answer: no, never.',
+   '3. At 30% sure: the bot scored +3 per 10 tries and I ended 4 behind.',
+   '4. With wrong = -1 the break-even point is 50%. Rules I tried on the whole quiz: '+Object.keys(S.tried5).map(Number).sort((a,b)=>b-a).map(w=>'wrong '+w+' gives help '+quizOutcome(w).help).join('; ')+'.',
+   '5. Right +1, wrong -3: how sure before answering pays? '+(S.xferAns==null?'(skipped)':S.xferAns+'%'+(S.xferRight&&S.xferTries===1?' (correct)':'; the answer is 75%')),
+   '6. Leaderboard guess: Model '+(S.g7||'(skipped)')+'. Right answers only: A 24, B 22. Right minus wrong: A -51, B -4.',
+   '7. In my own words: '+(S.explain.trim()||'(blank)')].join('\n');}
+function wireFinal(){$('tell').addEventListener('input',e=>{S.explain=e.target.value;});
+  $('copy').addEventListener('click',()=>{const t=answersText(),done=()=>{$('copied').textContent='Copied. Paste it into Canvas.';},fall=()=>{let b=$('copybox');if(!b){b=document.createElement('textarea');b.id='copybox';b.readOnly=true;b.setAttribute('aria-label','Your answers');$('tell').parentElement.appendChild(b);}b.value=t;b.focus();b.select();$('copied').textContent='Select all of this and copy it.';};
+    try{navigator.clipboard.writeText(t).then(done,fall);}catch(e){fall();}});}
+function resetAll(){Object.assign(S,{stage:0,maxStage:0,quiz:null,g2:null,played:false,k:3,sawLow:false,you:false,fix:false,evenStep:false,sawEven:false,sawAbove:false,W5:0,tried5:{0:true},fstep:0,xferTries:0,xferDone:false,xferAns:null,xferRight:false,g7:null,mode7:0,explain:''});go(0);window.scrollTo(0,0);}
+
+cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;for(const h of hits){if(x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h){h.fn();return;}}});
+cv.addEventListener('mousemove',e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;cv.style.cursor=hits.some(h=>x>=h.x&&x<=h.x+h.w&&y>=h.y&&y<=h.y+h.h)?'pointer':'default';});
+let rz=null;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(Math.abs(Math.floor(cv.parentElement.clientWidth)-W)>1){resize();enter(S.stage);ui();}},120);});
+readColors();steps();ui();resize();enter(0);ui();resize();
+requestAnimationFrame(tick);
+window.NW={get L(){return L;},S,V,go,quizOutcome,answersText,MODELS};   /* for the test script */
+})();
+</script>
+<!-- Anonymous page-view count (GoatCounter, rjedtech.goatcounter.com): no cookies, no personal data, no form contents. -->
+<script data-goatcounter="https://rjedtech.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -12,8 +12,15 @@ How large language models work, why their training goals shape what they do, whe
 
 Every figure in a tool links to its source (OpenAI, Anthropic, Google, IEA, LBNL, peer-reviewed studies), with dates.
 
+## Story pages (pilot)
+Two tools rebuilt as walk-through pages for comparison with the current versions. Nothing on the home page links to them yet.
+- **Next Word: why the bot said 3:30** — https://rjedtech.github.io/Raider-AILab/next-word.html (current tool: https://rjedtech.github.io/Raider-AILab/#nextword)
+- **Score the Bot: who taught it to bluff?** — https://rjedtech.github.io/Raider-AILab/score-the-bot.html (current tool: https://rjedtech.github.io/Raider-AILab/#scorebot)
+
+Each page is one self-contained file. Add `?fast=1` to run the animations at test speed.
+
 ## Files
-`index.html`, `engine.js`, `biolab.css`, `courses.js`, `sims/*.js`, `practical/*.js`, `review/*.js`. Everything runs in the browser; no student data leaves the device.
+`index.html`, `next-word.html`, `score-the-bot.html`, `engine.js`, `biolab.css`, `courses.js`, `sims/*.js`, `practical/*.js`, `review/*.js`. Everything runs in the browser; no student data leaves the device.
 
 ## License
 
