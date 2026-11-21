@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Raider AILab The Mirror</title>
+<meta name="description" content="One accuracy score, split by who is in the test photos. Change the test and watch the headline move. Raider AILab, Regis Jesuit High School.">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+/* Layout idea: the picture is the page. One large stage, one sentence under it, one obvious button. */
+:root{
+  --bg:#f3f3f1; --card:#ffffff; --card2:#f1f1ee; --fg:#1c1c1f; --muted:#5d5d63; --line:#d8d8d3;
+  --rj:#C11430; --rj-ink:#a8102a; --focus:#1f6feb; --good:#1b7339; --bad:#b3261e;
+  --cv-bg:#f7f8f6; --hl:#f6dfa4; --think:#a8178f; --you:#C11430;
+  --font:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#15161a; --card:#1d1f24; --card2:#282b32; --fg:#ececef; --muted:#a2a2aa; --line:#353840;
+  --rj-ink:#ed516a; --focus:#6ea8ff; --good:#5cc27f; --bad:#f2827a;
+  --cv-bg:#191b20; --hl:#6b5520; --think:#ec74da; --you:#C11430; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#15161a; --card:#1d1f24; --card2:#282b32; --fg:#ececef; --muted:#a2a2aa; --line:#353840;
+  --rj-ink:#ed516a; --focus:#6ea8ff; --good:#5cc27f; --bad:#f2827a;
+  --cv-bg:#191b20; --hl:#6b5520; --think:#ec74da; --you:#C11430; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--font);-webkit-text-size-adjust:100%}
+a{color:var(--rj-ink)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+
+.mast{background:#2a2a2a;border-bottom:4px solid var(--rj)}
+.mast-in{max-width:1132px;margin:0 auto;padding:9px 16px;display:flex;align-items:center;gap:13px}
+.mast img{height:36px;width:auto;display:block}
+.mast h1{margin:0;color:#fff;font-size:19px;line-height:1.15;font-weight:700}
+.mast p{margin:2px 0 0;color:#b8b8b8;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase}
+.mast a{margin-left:auto;color:#f2f2f2;font-size:14px;font-weight:600;text-decoration:none;white-space:nowrap}
+.mast a:hover{text-decoration:underline}
+
+.wrap{max-width:1132px;margin:0 auto;padding:10px 16px 28px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:10px 18px;flex-wrap:wrap;margin-bottom:8px}
+.eyebrow{margin:0;color:var(--rj-ink);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.top h2{margin:0;font-size:24px;line-height:1.2;text-wrap:balance}
+.steps{list-style:none;margin:0;padding:0;display:flex;gap:4px;flex-wrap:wrap}
+.steps button{font:600 13px/1 var(--font);padding:7px 10px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer}
+.steps button .n{font-variant-numeric:tabular-nums}
+.steps button[aria-current="step"]{background:var(--rj);border-color:var(--rj);color:#fff}
+.steps button.done{color:var(--fg)}
+.steps button:disabled{opacity:.5;cursor:default}
+@media(max-width:820px){.steps button .t{display:none}.steps button[aria-current="step"] .t{display:inline}}
+
+.stagebox{background:var(--cv-bg);border:1px solid var(--line);border-radius:14px}
+#cv{display:block;width:100%;border-radius:14px 14px 0 0;touch-action:manipulation}
+.bar{display:flex;min-height:112px;gap:12px 20px;align-items:center;flex-wrap:wrap;
+  background:var(--card);border-top:1px solid var(--line);border-radius:0 0 13px 13px;padding:12px 16px 14px}
+.cap{flex:1 1 420px;min-width:0}
+.kick{display:block;color:var(--rj-ink);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+#cap{margin:2px 0 0;font-size:19px;line-height:1.4;font-weight:500;max-width:62ch;text-wrap:pretty}
+#cap b{font-weight:700}
+#extra:empty{display:none}
+#extra{margin-top:8px;font-size:16px;max-width:66ch}
+.acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{font:600 16px/1.2 var(--font);padding:11px 16px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--fg);cursor:pointer}
+.btn:hover:not(:disabled){border-color:var(--fg)}
+.btn.primary{background:var(--rj);border-color:var(--rj);color:#fff;padding:12px 20px;font-size:17px}
+.btn.primary:hover:not(:disabled){background:#a8102a;border-color:#a8102a}
+.btn.chip{border-radius:999px;border:2px solid var(--think);background:var(--card);font-size:17px;padding:10px 20px}
+.btn.quiet{background:none;border-color:transparent;color:var(--muted);font-weight:500;font-size:14px;padding:8px 6px;text-decoration:underline}
+.btn:disabled{opacity:.5;cursor:default}
+
+.side{display:flex;flex-direction:column;gap:10px;align-items:flex-end}.side .acts{justify-content:flex-end}#ctl:empty{display:none}#ctl .dial{flex-direction:column;align-items:stretch;gap:2px}#ctl .dial .track{display:flex;align-items:center;gap:8px}#ctl .dial input[type=range]{width:min(300px,62vw)}#ctl .dial output{font-size:17px;margin-left:4px}
+@media(max-width:700px){.side{align-items:stretch;flex:1 1 100%}}
+.dial{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dial label{font-weight:700}
+.dial input[type=range]{width:min(360px,70vw);accent-color:var(--rj);height:28px}
+.dial output{font:700 18px/1 var(--font);font-variant-numeric:tabular-nums;min-width:2.6em}
+.dial .ends{color:var(--muted);font-size:14px}
+.math{font-size:18px;margin:0;font-variant-numeric:tabular-nums}
+.math b{color:var(--rj-ink)}
+.term{color:var(--muted);font-size:15px;margin:6px 0 0}
+.ans{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.ans input{font:600 18px/1 var(--font);width:6.5em;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--fg)}
+.use{margin:0;padding:0;list-style:none;display:grid;gap:8px}
+.use li{background:var(--card2);border-radius:10px;padding:9px 12px;font-size:15.5px}
+.use b{color:var(--rj-ink)}
+.tell{display:grid;gap:6px;margin-top:10px}
+.tell label{font-weight:700}
+.tell textarea{font:16px/1.45 var(--font);width:100%;min-height:74px;padding:10px;border-radius:10px;border:2px solid var(--line);background:var(--card);color:var(--fg);resize:vertical}
+.copied{color:var(--good);font-weight:700;font-size:15px}
+#copybox{width:100%;min-height:120px;font:14px/1.4 ui-monospace,Consolas,monospace;margin-top:8px;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg)}
+
+details.more{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 16px}
+details.more summary{cursor:pointer;font-weight:700;padding:12px 0}
+details.more p,details.more li{font-size:15px;max-width:74ch}
+details.more ul{padding-left:20px}
+.foot{margin-top:18px;color:var(--muted);font-size:14px;text-align:center}
+.nextlink{margin:14px 0 0}.nextlink a.btn{display:inline-block;text-decoration:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media(max-width:700px){
+  .bar{position:sticky;bottom:0;z-index:2;min-height:0;box-shadow:0 -6px 16px rgba(0,0,0,.10);padding:9px 12px 11px;gap:8px}
+  .bar.final{position:static;box-shadow:none}
+  .mast p{display:none}.mast-in{padding:7px 12px}.mast img{height:30px}
+  .wrap{padding:8px 10px 20px}.eyebrow{display:none}.top{margin-bottom:6px;gap:6px}.top h2{font-size:18px}
+  .steps button{padding:6px 9px;font-size:12px}
+  #cap{font-size:15.5px;line-height:1.35}.kick{font-size:11px}
+  .btn{padding:9px 13px;font-size:15px}.btn.primary{padding:10px 16px;font-size:16px;flex:1 1 auto}.btn.chip{font-size:16px;padding:8px 18px}
+  #extra{font-size:15px}.math{font-size:16px}.term{font-size:14px}.use li{font-size:14.5px}
+}
+
+</style>
+</head>
+<body>
+<header class="mast"><div class="mast-in">
+  <img alt="RJ" src="data:image/png;base64,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">
+  <div><h1>Raider AILab</h1><p>How AI works, and how to work with it</p></div>
+  <a href="https://rjedtech.github.io/Raider-AILab/">← All tools</a>
+</div></header>
+
+<main class="wrap">
+  <div class="top">
+    <div><p class="eyebrow">Goals shape behavior</p><h2>The Mirror: 95% right, for whom?</h2></div>
+    <ol class="steps" id="steps" aria-label="Steps"></ol>
+  </div>
+
+  <section class="stagebox" aria-label="The model">
+    <canvas id="cv" role="img" aria-label="A tank chart of 100 test photos. Each column is one group of people: its width is the group’s share of the test and its green height is how often the software is right for that group. A dashed line marks the headline score."></canvas>
+    <div class="bar">
+      <div class="cap">
+        <span class="kick" id="kick"></span>
+        <p id="cap" aria-live="polite"></p>
+        <div id="extra"></div>
+      </div>
+      <div class="side"><div id="ctl"></div><div class="acts" id="acts"></div></div>
+    </div>
+  </section>
+
+  <details class="more">
+    <summary>For teachers: the math, the data and the sources</summary>
+    <p><b>The math.</b> Weighted average (Statistics; Algebra 1 mixture problems): headline = share₁ × score₁ + share₂ × score₂ + …, with shares that add to 1. In the picture each column’s area is its share times its score, and the dashed headline is the level the green would settle at if poured flat.</p>
+    <p><b>The data.</b> The four scores are the error rates Joy Buolamwini and Timnit Gebru measured for IBM’s gender classifier in “Gender Shades” (2018, Table 4): wrong 0.3% of the time for lighter-skinned men, 7.1% for lighter-skinned women, 12.0% for darker-skinned men and 34.7% for darker-skinned women, 87.9% right overall on their benchmark. The other two products tested, from Microsoft and Face++, showed the same pattern. The products sorted every face as male or female, so the study used those two labels. Their benchmark has 1,270 lawmakers from Rwanda, Senegal, South Africa, Iceland, Finland and Sweden.</p>
+    <p><b>What this toy assumes.</b> The opening test mix copies IJB-A, a U.S. government face benchmark of the time: 59.4% lighter-skinned men, 20.2% lighter-skinned women, 16.0% darker-skinned men and 4.4% darker-skinned women. The page applies the rates measured on her benchmark to other mixes of people. Real error rates also depend on the photos themselves, so the “95 right in 100” headline is a what-if, not a number IBM reported.</p>
+    <p><b>Sources.</b> Buolamwini and Gebru, “Gender Shades,” Proceedings of Machine Learning Research 81, 2018 (<a href="https://proceedings.mlr.press/v81/buolamwini18a.html">paper</a>). MIT News, February 2018, for her story and the 97% claim tested on photos more than 77% male and more than 83% white (<a href="https://news.mit.edu/2018/study-finds-gender-skin-type-bias-artificial-intelligence-systems-0212">article</a>). Raji and Buolamwini, “Actionable Auditing,” 2019, for the follow-up: IBM’s new version in 66 days, its error for darker-skinned women at 16.97% in August 2018, and its overall error down 7.7 points from 12.1% (<a href="https://cacm.acm.org/research/actionable-auditing-revisited">article</a>).</p>
+    <p><b>How to use it in class.</b> It is built to run cold. A good stopping point for discussion is step 3, after students have slid the test both ways: who should decide what goes in the test? Answers can be copied at the end and pasted into Canvas.</p>
+  </details>
+
+  <p class="foot">RJ Ed Tech · Raider AILab · A simplified model for instruction<br>© 2026 Jason Beyer, RJ Ed Tech · <a href="https://creativecommons.org/licenses/by-nc/4.0/">CC BY-NC 4.0</a>: free to share and adapt for non-commercial use, with credit.</p>
+</main>
+
+<script>window.NEXT_HTML='<p class="nextlink"><a class="btn" href="score-the-bot.html">← Before this: Score the Bot</a> <a class="btn" href="./">All AILab tools</a></p>';</script>
+<script>
+(()=>{'use strict';
+/* ================= The Mirror: the numbers =================
+   Error rates are the ones Buolamwini & Gebru measured for IBM's gender classifier on their Pilot Parliaments Benchmark (Gender Shades, 2018, Table 4).
+   IJB mix: the make-up of IJB-A, a U.S. government face benchmark (79.6% lighter-skinned; 59.4% lighter-skinned men; 4.4% darker-skinned women).
+   PPB mix: the make-up of the benchmark she built (1,270 lawmakers, six countries). */
+const STAGES=['The headline','Split it','Change the test','The mirror','Formula','What changed'];
+const GREEN='#1e8a4c',RED='#c93a32',GRAY='#8a8d96';
+const GROUPS=[{name:'lighter-skinned men',acc:99.7,col:'#2d6bd2'},{name:'lighter-skinned women',acc:92.9,col:'#7b3fe4'},{name:'darker-skinned men',acc:88.0,col:'#0d7f81'},{name:'darker-skinned women',acc:65.3,col:'#b0640a'}];
+const IJB=[59.4,20.2,16.0,4.4],PPB=[30.3,23.3,25.0,21.3],EQ=[25,25,25,25];
+const norm=a=>{const s=a.reduce((x,y)=>x+y,0);return a.map(x=>x/s);};
+/* the slider: n darker-skinned women in every 100 test photos; the other three groups keep the benchmark's proportions */
+function mixDF(n){const s=(n===4?4.4:n)/100,o=norm(IJB.slice(0,3));return [o[0]*(1-s),o[1]*(1-s),o[2]*(1-s),s];}
+const headline=m=>m.reduce((a,s,i)=>a+s*GROUPS[i].acc,0);
+const AFTER={before:34.7,after:16.97,ovBefore:12.1,ovAfter:4.4,days:66};
+
+/* ================= state ================= */
+const S={stage:0,maxStage:0,g1:null,split:false,df:4,sawHigh:false,sawZero:false,g4:null,her:false,fstep:0,xferTries:0,xferDone:false,xferAns:null,xferRight:false,explain:''};
+const V={};
+let W=0,H=0,DPR=1,C={},L={tall:false},busy=false,hits=[],tNow=0,wantFocus=false;
+const tweens=[];
+const RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+const SPEED=RM?0.02:/[?&]fast=1/.test(location.search)?0.02:1;   /* ?fast=1 is for test scripts */
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d'),BAR=document.querySelector('.bar');
+const FONT=getComputedStyle(document.documentElement).getPropertyValue('--font')||'sans-serif';
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),lerp=(a,b,t)=>a+(b-a)*t,TAU=Math.PI*2;
+const eio=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,eout=t=>1-Math.pow(1-t,3),lin=t=>t;
+const sg=v=>(v>0?'+':v<0?'−':'')+Math.abs(v);
+function anim(dur,fn,ease){return new Promise(res=>{tweens.push({t0:performance.now(),dur:Math.max(1,dur*SPEED),fn,ease:ease||eio,res});});}
+const sleep=ms=>anim(ms,()=>{},lin);
+function stopAll(){tweens.length=0;}
+function readColors(){const cs=getComputedStyle(document.documentElement),g=n=>cs.getPropertyValue(n).trim();
+  C={fg:g('--fg'),muted:g('--muted'),line:g('--line'),card:g('--card'),card2:g('--card2'),bg:g('--cv-bg'),rj:g('--rj'),rjink:g('--rj-ink'),hl:g('--hl'),think:g('--think'),good:g('--good'),bad:g('--bad')};}
+
+/* ================= drawing helpers ================= */
+function rr(x,y,w,h,r){r=Math.max(0,Math.min(r,w/2,h/2));ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function text(s,x,y,o){o=o||{};ctx.font=`${o.weight||500} ${o.size||14}px ${FONT}`;ctx.textAlign=o.align||'left';ctx.textBaseline=o.base||'middle';ctx.fillStyle=o.color||C.fg;
+  if(o.alpha!=null){const a=ctx.globalAlpha;ctx.globalAlpha=a*o.alpha;ctx.fillText(s,x,y);ctx.globalAlpha=a;}else ctx.fillText(s,x,y);}
+function tw(s,size,weight){ctx.font=`${weight||500} ${size}px ${FONT}`;return ctx.measureText(s).width;}
+function wrapLines(str,maxW,size,weight){const ws=str.split(' ');const out=[];let cur='';ws.forEach(w=>{const t=cur?cur+' '+w:w;if(tw(t,size,weight)>maxW&&cur){out.push(cur);cur=w;}else cur=t;});if(cur)out.push(cur);return out;}
+function pill(s,x,y,o){o=o||{};const fs=o.size||14*L.k,w=tw(s,fs,700)+fs*1.5,h=fs*1.9;const px=o.align==='center'?x-w/2:o.align==='right'?x-w:x;
+  rr(px,y-h/2,w,h,h/2);if(o.fill){ctx.fillStyle=o.fill;ctx.fill();}if(o.stroke){ctx.strokeStyle=o.stroke;ctx.lineWidth=o.lw||2;ctx.stroke();}
+  text(s,px+w/2,y+.5,{size:fs,weight:700,color:o.color||C.fg,align:'center'});return w;}
+function chip(x,y,r,label,color,filled,alpha){ctx.save();if(alpha!=null)ctx.globalAlpha*=alpha;ctx.beginPath();ctx.arc(x,y,r,0,TAU);
+  if(filled){ctx.fillStyle=color;ctx.fill();}else{ctx.strokeStyle=color;ctx.lineWidth=1.6;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);}
+  if(label&&r>=7)text(label,x,y+.5,{size:r*1.02,weight:700,color:filled?'#fff':color,align:'center'});ctx.restore();}
+function card(x,y,w,h){rr(x,y,w,h,12);ctx.fillStyle=C.card;ctx.fill();ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.stroke();}
+
+
+
+/* ================= layout ================= */
+function resize(){const box=cv.parentElement;W=Math.floor(box.clientWidth);L.tall=W<700;
+  const barH=L.tall?(BAR.offsetHeight||150):126;
+  const top=cv.getBoundingClientRect().top+window.scrollY,avail=window.innerHeight-top-barH-10;
+  H=L.tall?Math.round(clamp(avail,500,680)):Math.round(clamp(Math.min(W*0.56,avail),380,620));
+  DPR=Math.min(window.devicePixelRatio||1,2.5);cv.width=Math.round(W*DPR);cv.height=Math.round(H*DPR);cv.style.height=H+'px';layout();}
+function layout(){L.k=L.tall?clamp(W/400,.86,1):clamp(W/1060,.84,1.1);const k=L.k;
+  if(L.tall){const lh=Math.round(H*0.50);L.left={x:10,y:10,w:W-20,h:lh};L.right={x:10,y:lh+18,w:W-20,h:H-lh-28};}
+  else{const lw=Math.round(W*0.635);L.left={x:20,y:14,w:lw-20,h:H-28};L.right={x:lw+16,y:14,w:W-lw-34,h:H-28};}
+  const l=L.left;L.tank=L.tall?{x:l.x+38,y:l.y+28,w:l.w-38-52,h:l.h-28-62}:{x:l.x+56,y:l.y+36*k,w:l.w-56-74,h:l.h-36*k-86*k};}
+
+/* ================= the tank: width = share of the test, height = how often it is right ================= */
+function drawTank(T,m,o){o=o||{};const k=L.k,ov=headline(m),split=o.split==null?1:o.split,who=o.who==null?1:o.who,groups=o.groups||GROUPS,fsS=(L.tall?11:13)*k;
+  ctx.save();if(o.alpha!=null)ctx.globalAlpha*=o.alpha;
+  text(o.title||(L.tall?'100 test photos':'100 test photos, sorted by who is in them'),T.x,T.y-14*k,{size:(L.tall?12:14.5)*k,weight:700});
+  /* columns */
+  let x=T.x;const xs=[];
+  m.forEach((s,i)=>{const w=s*T.w,acc=lerp(ov,groups[i].acc,split),gh=acc/100*T.h;xs.push({x,w,gh,acc});
+    if(w>0.2){ctx.fillStyle=RED;ctx.fillRect(x,T.y,w,T.h-gh);ctx.fillStyle=GREEN;ctx.fillRect(x,T.y+T.h-gh,w,gh);}x+=w;});
+  /* faint 10 x 10 grid */
+  ctx.strokeStyle=C.bg;ctx.globalAlpha*=.28;ctx.lineWidth=1;for(let i=1;i<10;i++){ctx.beginPath();ctx.moveTo(T.x+T.w*i/10,T.y);ctx.lineTo(T.x+T.w*i/10,T.y+T.h);ctx.moveTo(T.x,T.y+T.h*i/10);ctx.lineTo(T.x+T.w,T.y+T.h*i/10);ctx.stroke();}ctx.globalAlpha/=.28;
+  /* column walls once it is split */
+  if(split>0.02){ctx.strokeStyle=C.bg;ctx.lineWidth=2.5;ctx.globalAlpha*=split;xs.slice(1).forEach(c=>{ctx.beginPath();ctx.moveTo(c.x,T.y);ctx.lineTo(c.x,T.y+T.h);ctx.stroke();});ctx.globalAlpha/=split;}
+  ctx.strokeStyle=C.fg;ctx.lineWidth=1.5;ctx.strokeRect(T.x,T.y,T.w,T.h);
+  /* axis */
+  [[0,'0'],[50,'50%'],[100,'100%']].forEach(a=>text(a[1],T.x-8,T.y+T.h*(1-a[0]/100),{size:fsS,color:C.muted,align:'right'}));
+  ctx.save();ctx.translate(T.x-(L.tall?28:42),T.y+T.h/2);ctx.rotate(-Math.PI/2);text(o.yLabel||'how often it is right',0,0,{size:fsS,color:C.muted,align:'center'});ctx.restore();
+  if(!o.noLegend){const lx=T.x+T.w,ly=T.y-14*k,w2=tw('wrong',fsS,700),w1=tw('right',fsS,700);text('wrong',lx,ly,{size:fsS,weight:700,align:'right'});ctx.fillStyle=RED;ctx.fillRect(lx-w2-16,ly-6,11,11);text('right',lx-w2-26,ly,{size:fsS,weight:700,align:'right'});ctx.fillStyle=GREEN;ctx.fillRect(lx-w2-26-w1-16,ly-6,11,11);}
+  /* who is in the test: the strip under the tank is the same widths as the columns */
+  const sy=T.y+T.h+6,sh=L.tall?10:14;
+  if(who<1){ctx.fillStyle=GRAY;ctx.globalAlpha*=(1-who)*.6;ctx.fillRect(T.x,sy,T.w,sh);ctx.globalAlpha/=((1-who)*.6);text(o.whoHidden||'who is in the test photos? the headline does not say',T.x+T.w/2,sy+sh+14*k,{size:fsS,color:C.muted,align:'center',alpha:1-who});}
+  if(who>0){ctx.globalAlpha*=who;xs.forEach((c,i)=>{if(c.w>0.2){ctx.fillStyle=groups[i].col;ctx.fillRect(c.x+(i?1:0),sy,Math.max(0,c.w-(i?1:0)),sh);}
+      const nm=groups[i].name.split(' ');if(c.w>=Math.max(tw(nm[0],fsS,700),tw(nm.slice(1).join(' '),fsS,700))+8){const l1=nm.length>1?nm[0]:groups[i].name,l2=nm.slice(1).join(' ');text(l1,c.x+c.w/2,sy+sh+12*k,{size:fsS,weight:700,align:'center',color:C.fg});if(l2)text(l2,c.x+c.w/2,sy+sh+12*k+fsS*1.2,{size:fsS,weight:700,align:'center',color:C.fg});
+        text(o.shareText?o.shareText(m[i]):Math.round(m[i]*100)+' of 100',c.x+c.w/2,sy+sh+12*k+fsS*(l2?2.5:1.3),{size:fsS,color:C.muted,align:'center'});}});ctx.globalAlpha/=who;}
+  /* each column's own score */
+  if(split>0.55){const a=clamp((split-.55)/.45,0,1);xs.forEach((c,i)=>{const yTop=T.y+T.h-c.gh,lab=groups[i].acc.toFixed(o.dec==null?1:o.dec)+'%';
+      if(c.w>=50)text(lab,c.x+c.w/2,T.y+T.h-c.gh*0.45,{size:(L.tall?12:Math.min(19,c.w/3.4))*k,weight:700,color:'#fff',align:'center',alpha:a});
+      else if(i===m.length-1&&c.w>0.5){ctx.strokeStyle=C.fg;ctx.lineWidth=1.5;ctx.globalAlpha*=a;ctx.beginPath();ctx.moveTo(T.x+T.w+3,yTop);ctx.lineTo(T.x+T.w+12,yTop);ctx.stroke();ctx.globalAlpha/=a;text(lab,T.x+T.w+15,yTop,{size:(L.tall?12:15)*k,weight:700,alpha:a});text('right',T.x+T.w+15,yTop+16*k,{size:fsS,color:C.muted,alpha:a});}});}
+  /* the headline: the level the green would settle at if you poured it flat */
+  if(!o.noLevel){const hy=T.y+T.h*(1-ov/100);ctx.setLineDash([7,5]);ctx.strokeStyle=C.fg;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(T.x-4,hy);ctx.lineTo(T.x+T.w+4,hy);ctx.stroke();ctx.setLineDash([]);
+    const lab=(o.levelLabel||'headline ')+ov.toFixed(o.dec==null?1:o.dec)+'%',pw=tw(lab,fsS*1.05,700)+fsS*1.6;pill(lab,clamp(T.x+T.w*0.34,T.x+pw/2,T.x+T.w-pw/2),hy,{size:fsS*1.05,align:'center',fill:C.fg,color:C.bg});}
+  ctx.restore();return xs;}
+function drawPanel(){const k=L.k,r=L.right,m=V.mix,ov=headline(m),who=V.who||0,st=S.stage,fs=(L.tall?12.5:14.5)*k;
+  const hh=(L.tall?62:94)*k;card(r.x,r.y,r.w,hh);rr(r.x,r.y,r.w,hh,12);ctx.strokeStyle=C.fg;ctx.lineWidth=2;ctx.stroke();
+  text('The headline',r.x+14,r.y+hh*0.34,{size:fs,weight:700});text('one score for the whole test',r.x+14,r.y+hh*0.34+fs*1.3,{size:fs*.86,color:C.muted});
+  text(ov.toFixed(1)+'%',r.x+r.w-14,r.y+hh/2+2,{size:Math.min(40*k,hh*.5),weight:700,align:'right'});
+  if(who<=0.01)return;
+  ctx.save();ctx.globalAlpha*=who;const f=V.fmode,sumH=f?(L.tall?26:38)*k:0,rowH=Math.min((L.tall?44:60)*k,(r.h-hh-10-sumH)/4-6),y0=r.y+hh+10;
+  GROUPS.forEach((g,i)=>{const y=y0+i*(rowH+6),hot=i===3&&(V.split||0)>0.5&&!f;card(r.x,y,r.w,rowH);if(hot){rr(r.x,y,r.w,rowH,12);ctx.strokeStyle=g.col;ctx.lineWidth=3;ctx.stroke();}
+    ctx.fillStyle=g.col;ctx.beginPath();ctx.arc(r.x+16,y+rowH*0.36,6,0,TAU);ctx.fill();
+    text(g.name,r.x+28,y+rowH*0.36,{size:fs*.95,weight:700});text(Math.round(m[i]*100)+' of 100 test photos',r.x+28,y+rowH*0.36+fs*1.25,{size:fs*.82,color:C.muted});
+    const sp=(V.split||0)>0.5;
+    if(f==='w')text((m[i]).toFixed(3)+' × '+g.acc.toFixed(1),r.x+r.w-12,y+rowH/2,{size:fs*1.1,weight:700,align:'right'});
+    else if(sp){text(g.acc.toFixed(1)+'%',r.x+r.w-12,y+rowH*0.40,{size:fs*1.35,weight:700,align:'right',color:i===3?C.bad:C.fg});text('right',r.x+r.w-12,y+rowH*0.40+fs*1.15,{size:fs*.8,color:C.muted,align:'right'});}
+    else text('?',r.x+r.w-14,y+rowH/2,{size:fs*1.5,weight:700,align:'right',color:C.muted});});
+  if(f){const y=y0+4*(rowH+6)+sumH/2-2;text(f==='eq'?'(99.7 + 92.9 + 88.0 + 65.3) ÷ 4 = '+ov.toFixed(1)+'%':'added up = '+ov.toFixed(1)+'%',r.x+r.w-12,y,{size:fs*(f==='eq'?1.0:1.15),weight:700,align:'right',color:C.rjink});}
+  ctx.restore();}
+
+/* ================= stage 4 card: who was in the tests the field used ================= */
+function drawFacts(a){const k=L.k,T=L.tank,w=Math.min(T.w-20,460*k),h=Math.min(T.h-10,(L.tall?190:218)*k),x=T.x+(T.w-w)/2,y=T.y+(T.h-h)/2;ctx.save();ctx.globalAlpha=a;card(x,y,w,h);
+  text('“More than 97% accurate”',x+18,y+26*k,{size:(L.tall?15:19)*k,weight:700});text('a face system from a major U.S. tech company',x+18,y+26*k+20*k,{size:(L.tall?11.5:13)*k,color:C.muted});
+  text('Who was in its test photos?',x+18,y+78*k,{size:(L.tall?12.5:14.5)*k,weight:700});
+  const bx=x+18,bw=w-36,rows=[['men',77],['white',83]],rv=V.facts||0;
+  rows.forEach((rw,i)=>{const by=y+(L.tall?96:104)*k+i*(L.tall?40:46)*k,bh=(L.tall?16:20)*k;rr(bx,by,bw,bh,5);ctx.fillStyle=C.card2;ctx.fill();ctx.strokeStyle=C.line;ctx.lineWidth=1;ctx.stroke();
+    if(rv>0){rr(bx,by,bw*rw[1]/100*rv,bh,5);ctx.fillStyle=C.fg;ctx.fill();text('more than '+rw[1]+' in 100 '+rw[0],bx,by+bh+11*k,{size:(L.tall?11.5:13)*k,weight:700,alpha:rv});}
+    else text('? in 100 '+rw[0],bx,by+bh+11*k,{size:(L.tall?11.5:13)*k,weight:700,color:C.muted});});
+  if(S.g4&&rv>0.5){const ok=S.g4==='8',lab='your guess: '+({half:'about half',two:'about two-thirds',8:'more than 8 in 10'})[S.g4]+(ok?'  ✓':'  ✗');pill(lab,x+w-14,y+h-17*k,{size:(L.tall?11:13)*k,align:'right',stroke:C.think,color:C.think,lw:2});}
+  ctx.restore();}
+
+/* ================= stage 6: the same product, before and after ================= */
+function drawAfter(){const k=L.k,g=2,top=62*k,gs=Math.min(H-top-26,(W-80)/2-220*k),cs=Math.floor(gs/10)-g,gridW=10*(cs+g)-g;
+  if(L.tall){const cs2=Math.floor((W-34)/20)-g,gw=10*(cs2+g)-g,x00=(W-2*gw-14)/2;text('Darker-skinned women, same product',W/2,20*k,{size:12.5*k,weight:700,align:'center'});
+    [[AFTER.before,'2017'],[AFTER.after,'Aug 2018']].forEach((d,mi)=>{const x0=x00+mi*(gw+14),wr=Math.round(d[0]);text(d[1],x0,46*k,{size:15*k,weight:700});
+      for(let i=0;i<100;i++){rr(x0+(i%10)*(cs2+g),60*k+Math.floor(i/10)*(cs2+g),cs2,cs2,3);ctx.fillStyle=i<100-wr?GREEN:RED;ctx.fill();}
+      text('wrong '+d[0].toFixed(1)+'%',x0,60*k+gw+18*k,{size:14*k,weight:700,color:C.bad});});return;}
+  const info=210*k,gapX=Math.max(24,Math.min(70,W-60-2*(gridW+info+18))),tot=2*(gridW+18+info)+gapX,x00=(W-tot)/2;
+  text('Darker-skinned women, the same company’s product, tested again on her photos',x00,24*k,{size:15*k,weight:700});
+  [[AFTER.before,'2017','the first test',AFTER.ovBefore],[AFTER.after,'August 2018','after a new version',AFTER.ovAfter]].forEach((d,mi)=>{const x0=x00+mi*(gridW+18+info+gapX),ix=x0+gridW+18,wr=Math.round(d[0]),a=mi===1?(V.after==null?1:V.after):1;
+    ctx.save();ctx.globalAlpha=a;for(let i=0;i<100;i++){rr(x0+(i%10)*(cs+g),top+Math.floor(i/10)*(cs+g),cs,cs,Math.min(4,cs*.2));ctx.fillStyle=i<100-wr?GREEN:RED;ctx.fill();}
+    text(d[1],ix,top+12*k,{size:19*k,weight:700});text(d[2],ix,top+34*k,{size:12.5*k,color:C.muted});
+    text('wrong',ix,top+72*k,{size:13*k,color:C.muted,weight:600});text(d[0].toFixed(1)+'%',ix,top+102*k,{size:34*k,weight:700,color:C.bad});
+    text('about '+wr+' in every 100',ix,top+132*k,{size:13.5*k,weight:700});
+    text('all groups together:',ix,top+166*k,{size:12.5*k,color:C.muted});text('wrong '+d[3].toFixed(1)+'%',ix,top+186*k,{size:15*k,weight:700});
+    if(mi===1)pill(AFTER.days+' days to a new version',ix,top+222*k,{size:13*k,fill:C.rj,color:'#fff'});ctx.restore();});
+  if(V.after!=null&&V.after>0&&V.after<1){}
+}
+/* ================= the no-picture problem, and its picture when asked for ================= */
+function drawXfer(a){const k=L.k,cx=W/2;ctx.save();ctx.globalAlpha=a;
+  text('your grade',cx,H*0.10,{size:14*k,weight:700,color:C.muted,align:'center'});
+  const fs=(L.tall?14:19)*k;text('homework: 20% of the grade, and you have 100%',cx,H*0.20,{size:fs,weight:700,align:'center'});text('tests: 80% of the grade, and you have 70%',cx,H*0.29,{size:fs,weight:700,align:'center'});
+  text('grade = '+(S.xferDone?'0.2 × 100 + 0.8 × 70 = 76%':'?'),cx,H*0.41,{size:(L.tall?17:24)*k,weight:700,align:'center',color:C.rjink});
+  if(V.help>0){const tw2=Math.min(W-140,420*k),th=H*0.36,T={x:cx-tw2/2,y:H*0.53,w:tw2,h:th};
+    drawTank(T,[0.2,0.8],{alpha:V.help,split:1,who:1,groups:[{name:'homework',acc:100,col:'#2d6bd2'},{name:'tests',acc:70,col:'#b0640a'}],title:' ',noLegend:true,noLevel:!S.xferDone,levelLabel:'grade ',dec:0,yLabel:'your score',shareText:v=>Math.round(v*100)+'% of the grade'});}
+  ctx.restore();}
+
+/* ================= loop ================= */
+function draw(){ctx.setTransform(DPR,0,0,DPR,0,0);ctx.clearRect(0,0,W,H);hits=[];const st=S.stage,k=L.k;
+  /* the mix eases toward its target, so the picture moves as the numbers change */
+  if(V.mixT){if(!V.mix)V.mix=V.mixT.slice();V.mix=V.mix.map((v,i)=>{const d=V.mixT[i]-v;return Math.abs(d)<1e-4?V.mixT[i]:v+d*(RM?1:.2);});}
+  if(st===5){drawAfter();return;}
+  if(st===4&&(V.sym||0)>0){if((V.mainA==null?1:V.mainA)>0.01){ctx.save();ctx.globalAlpha=V.mainA;drawTank(L.tank,V.mix,{split:V.split,who:V.who});ctx.restore();}drawXfer(V.sym);return;}
+  const dim=V.dim||0;
+  drawTank(L.tank,V.mix,{split:V.split||0,who:V.who||0,alpha:1-dim*.78,title:(V.who||0)<0.5?(L.tall?'The test: 100 photos':'The company’s test: 100 photos'):null});
+  ctx.save();ctx.globalAlpha=1-dim*.72;drawPanel();ctx.restore();
+  if(st===3&&(V.card||0)>0)drawFacts(V.card);
+  /* guesses, checked on the scene */
+  if(st===1&&S.g1&&(V.badge||0)>0){const ok=S.g1==='yes',lab='your guess: '+({no:'no, 95% means 95%',ten:'at worst 1 in 10',yes:'yes, it could'})[S.g1]+(ok?'  ✓':'  ✗');ctx.globalAlpha=V.badge;pill(lab,L.tank.x+10,L.tank.y+L.tank.h-20*k,{size:13.5*k,stroke:C.think,color:C.think,lw:2,fill:C.bg});ctx.globalAlpha=1;}
+}
+let frame=0;
+function tick(now){tNow=now;if(frame++%45===0)readColors();
+  for(let i=tweens.length-1;i>=0;i--){const t=tweens[i],p=clamp((now-t.t0)/t.dur,0,1);t.fn(t.ease(p));if(p>=1){tweens.splice(i,1);t.res();}}
+  draw();requestAnimationFrame(tick);}
+
+/* ================= stage logic ================= */
+function enter(n,keep){stopAll();busy=false;const prev=keep&&V.mix?V.mix.slice():null;for(const k in V)delete V[k];
+  V.mixT=mixDF(4);V.mix=V.mixT.slice();V.split=0;V.who=0;
+  if(n===1){V.split=S.split?1:0;V.who=S.split?1:0;V.badge=S.split?1:0;}
+  if(n===2){V.mixT=mixDF(S.df);V.mix=V.mixT.slice();V.split=1;V.who=1;}
+  if(n===3){V.split=1;V.who=1;V.card=S.her?0:1;V.dim=S.her?0:1;V.facts=S.g4?1:0;if(S.her){V.mixT=norm(PPB);V.mix=V.mixT.slice();}}
+  if(n===4){V.split=1;V.who=1;V.fmode=S.fstep>=1?'w':'eq';V.mixT=S.fstep>=1?norm(IJB):norm(EQ);V.mix=V.mixT.slice();V.mainA=S.fstep>=2?0:1;V.sym=S.fstep>=2?1:0;V.help=S.fstep>=2&&S.xferTries>=1?1:0;}
+  if(n===5){V.after=1;}
+  if(prev)V.mix=prev;}
+function alignView(soft){try{const r=cv.getBoundingClientRect();if(L.tall){if(BAR.classList.contains('final'))return;const barH=BAR.offsetHeight,want=Math.max(0,r.top+window.scrollY+H-(window.innerHeight-barH)+4);if(!soft||Math.abs(want-window.scrollY)>6)window.scrollTo({top:want,behavior:RM?'auto':'smooth'});}
+  else if(!soft&&(r.top<0||r.bottom>window.innerHeight+140)){window.scrollTo({top:Math.max(0,r.top+window.scrollY-8),behavior:RM?'auto':'smooth'});}}catch(e){}}
+function go(n){S.stage=n;S.maxStage=Math.max(S.maxStage,n);enter(n,true);steps();ui();alignView();if(n===5&&!RM){V.after=0;busy=true;ui();sleep(500).then(()=>anim(900,p=>V.after=p)).then(()=>{busy=false;ui();});}}
+
+function pickG1(v){if(S.g1)return;S.g1=v;ui();}
+async function doSplit(){if(busy||S.split)return;busy=true;ui();await anim(500,p=>V.who=p);await sleep(200);await anim(1500,p=>V.split=p);S.split=true;await anim(300,p=>V.badge=p);busy=false;ui();}
+function setDF(n){S.df=n;V.mixT=mixDF(n);if(n>=25)S.sawHigh=true;if(n<=1)S.sawZero=true;setCap(cap2());refreshActs();}
+async function pickG4(v){if(busy||S.g4)return;S.g4=v;busy=true;ui();await anim(900,p=>V.facts=p);busy=false;ui();}
+async function useHers(){if(busy)return;busy=true;S.her=true;ui();await anim(400,p=>{V.card=1-p;V.dim=1-p;});V.mixT=norm(PPB);await sleep(1100);busy=false;ui();}
+async function unequal(){if(busy)return;busy=true;ui();V.fmode='w';V.mixT=norm(IJB);await sleep(1000);S.fstep=1;busy=false;ui();}
+async function tryOne(){if(busy)return;busy=true;S.fstep=2;ui();await anim(400,p=>V.mainA=1-p);await anim(400,p=>V.sym=p);busy=false;ui();const el=$('xfer');if(el)el.focus();}
+async function checkXfer(){if(S.xferDone)return;const el=$('xfer'),v=parseFloat(String(el.value).replace('%','').trim());if(isNaN(v)){setCap('Type a number, like 80.');return;}
+  S.xferTries++;if(S.xferAns==null)S.xferAns=v;const right=Math.abs(v-76)<0.6;
+  if(right||S.xferTries>=2){S.xferDone=true;S.xferRight=right;await anim(300,p=>V.help=Math.max(V.help||0,p));ui();}
+  else{await anim(400,p=>V.help=p);ui();const e2=$('xfer');if(e2){e2.value='';e2.focus();}}}
+
+/* ================= captions ================= */
+function setCap(html){$('cap').innerHTML=html;}
+function cap2(){const n=S.df,ov=headline(mixDF(n)).toFixed(1);
+  const tail=(S.sawHigh&&S.sawZero)?' <b>The software never changed. You changed who was in the test.</b>':'';
+  if(n<=1)return 'With '+(n?'1':'none')+' in the test, the headline reads '+ov+'%: its best score. It says nothing about the people left out.'+(S.sawHigh?tail:' Now slide the other way, past 25.');
+  if(n>=25)return n+' of every 100 photos: the headline falls to <b>'+ov+'%</b>.'+(S.sawZero?tail:' The software did not change. Now slide all the way down to 0.');
+  if(n===4&&!S.sawHigh&&!S.sawZero)return 'Only 4 of the 100 test photos showed darker-skinned women. <b>Slide more of them into the test.</b> The software stays exactly the same.';
+  return n+' of every 100 photos: headline '+ov+'%. Keep sliding.';}
+function steps(){const ol=$('steps');ol.innerHTML='';STAGES.forEach((nm,i)=>{const li=document.createElement('li'),b=document.createElement('button');b.type='button';
+  b.innerHTML='<span class="n">'+(i+1)+'</span><span class="t"> '+nm+'</span>';b.setAttribute('aria-label','Step '+(i+1)+': '+nm);
+  if(i===S.stage)b.setAttribute('aria-current','step');if(i<=S.maxStage)b.className='done';else b.disabled=true;b.addEventListener('click',()=>{if(i!==S.stage)go(i);});li.appendChild(b);ol.appendChild(li);});}
+let lastActs=null;
+function renderActs(acts){lastActs=acts;if($('acts').contains(document.activeElement))wantFocus=true;const a=$('acts');a.innerHTML='';let first=null;
+  (acts||[]).forEach(b=>{const el=document.createElement('button');el.type='button';el.className='btn'+(b.primary?' primary':'')+(b.chip?' chip':'')+(b.quiet?' quiet':'');el.textContent=b.label;el.disabled=!!busy||!!b.disabled;el.addEventListener('click',b.fn);a.appendChild(el);if(b.primary&&!first)first=el;});
+  const tgt=first||a.querySelector('.btn');if(wantFocus&&tgt&&!tgt.disabled){tgt.focus({preventScroll:true});wantFocus=false;}}
+function actsFor(){if(S.stage===2)return [(S.sawHigh&&S.sawZero)?next('Who was in the real tests?'):{label:'Who was in the real tests?',fn:()=>go(3)}];return lastActs;}
+function refreshActs(){renderActs(actsFor());}
+function bar(o){$('kick').textContent='Step '+(S.stage+1)+' of '+STAGES.length+' · '+STAGES[S.stage];setCap(o.cap);
+  if($('extra').dataset.key!==o.extraKey){$('extra').innerHTML=o.extra||'';$('extra').dataset.key=o.extraKey||'';if(o.wire)o.wire();}
+  if($('ctl').dataset.key!==(o.ctlKey||'')){$('ctl').innerHTML=o.ctl||'';$('ctl').dataset.key=o.ctlKey||'';if(o.wireCtl)o.wireCtl();}
+  renderActs(o.acts);BAR.classList.toggle('final',S.stage===5);if(L.tall&&W)alignView(true);}
+const next=label=>({label,primary:true,fn:()=>go(S.stage+1)});
+const skip=()=>({label:'Skip this step',quiet:true,fn:()=>go(S.stage+1)});
+function ui(){const st=S.stage;let o={cap:'',extra:'',extraKey:'s'+st,acts:[]};
+  if(st===0){if(!S.g1)o={cap:'Face software labels each photo “man” or “woman.” Say a company tests it on 100 photos and it gets 95 right. <b>Could it still be wrong 1 time in 3 for one group of people?</b>',extraKey:'0',acts:[{label:'No',chip:true,fn:()=>pickG1('no')},{label:'1 in 10 at worst',chip:true,fn:()=>pickG1('ten')},{label:'Yes',chip:true,fn:()=>pickG1('yes')}]};
+    else o={cap:'A grad student named Joy Buolamwini ran into this for real. Face software for her art project kept failing on her own face. So she tested three companies’ products, photo by photo.',extraKey:'0',acts:[next('See what she measured')]};}
+  if(st===1){if(!S.split)o={cap:'One number covers all 100 photos. <b>Split it by who is in the photo.</b>',extraKey:'1',acts:[{label:'Split the score',primary:true,fn:doSplit}]};
+    else o={cap:'Same test, same 95 right. For lighter-skinned men: right 99.7% of the time. <b>For darker-skinned women: 65.3%. Wrong 1 time in 3.</b> These are the rates she measured for one real product. Look how thin that last column is.',extraKey:'1',acts:[next('Change who is in the test')]};}
+  if(st===2){o={cap:cap2(),extraKey:'2',ctlKey:'df',ctl:'<div class="dial"><label for="df">Darker-skinned women in the test: <output id="dfo" for="df">'+S.df+' of 100</output></label><div class="track"><span class="ends">0</span><input id="df" type="range" min="0" max="100" step="1" value="'+S.df+'"><span class="ends">100</span></div></div>',
+      wireCtl:()=>{$('df').addEventListener('input',e=>{const v=+e.target.value;$('dfo').textContent=v+' of 100';setDF(v);});},acts:[]};o.acts=(lastActs=null,actsFor());}
+  if(st===3){if(!S.g4)o={cap:'Now a real headline. A major U.S. tech company reported more than 97% accuracy for a face system. <b>How many of every 100 test photos do you think showed white faces?</b>',extraKey:'3',acts:[{label:'About half',chip:true,fn:()=>pickG4('half')},{label:'About two-thirds',chip:true,fn:()=>pickG4('two')},{label:'More than 8 in 10',chip:true,fn:()=>pickG4('8')}]};
+    else if(!S.her)o={cap:'More than 83 in 100 were white, and more than 77 in 100 were men. <b>A test built from the photos you already have is a mirror: the software looks good in it.</b> So she built a different test.',extraKey:'3',acts:[{label:'Use her test instead',primary:true,fn:useHers}]};
+    else o={cap:'Her test: 1,270 lawmakers from six countries, with every group well represented. Same software as before: <b>87.9%</b>, and a gap nobody could miss.',extraKey:'3',acts:[next('The math behind it')]};}
+  if(st===4){if(S.fstep===0)o={cap:'Give every group the same share of the test, and the headline is the plain average of the four scores.',extraKey:'4a',acts:[{label:'Now make the shares unequal',primary:true,fn:unequal}]};
+    else if(S.fstep===1)o={cap:'With unequal shares, each score counts as much as its share of the test. Big groups pull the headline toward their score.',extraKey:'4b',extra:'<p class="term"><b>headline = share₁ × score₁ + share₂ × score₂ + …</b> &nbsp;This is a weighted average. Your Canvas grade is one too.</p>',acts:[{label:'Try one without the picture',primary:true,fn:tryOne}]};
+    else if(!S.xferDone)o={cap:S.xferTries?'Not yet. Here is the picture: a thin column at 100 and a wide one at 70. Where does the level settle?':'Homework is 20% of your grade and you have 100%. Tests are 80% of your grade and you have 70%. <b>What is your grade?</b>',extraKey:'4c',extra:'<div class="ans"><label for="xfer" class="sr">Your answer, in percent</label><input id="xfer" inputmode="decimal" autocomplete="off" placeholder="%"><button type="button" class="btn primary" id="xcheck">Check</button></div>',
+      wire:()=>{$('xcheck').addEventListener('click',checkXfer);$('xfer').addEventListener('keydown',e=>{if(e.key==='Enter')checkXfer();});},acts:[skip()]};
+    else o={cap:(S.xferRight?'Right. ':'')+'0.2 × 100 + 0.8 × 70 = <b>76%</b>. The tests are most of the grade, so they pull it toward 70.',extraKey:'4d',acts:[next('What happened next')]};}
+  if(st===5)o={cap:'She published the results. The company shipped a new version 66 days later, and within seven months all three companies had. For darker-skinned women the error rate fell from 34.7% to 17%. <b>Better, and not finished.</b>',extraKey:'5z',extra:finalHTML(),wire:wireFinal,acts:[{label:'Start over',fn:resetAll}]};
+  bar(o);}
+function finalHTML(){return '<ul class="use">'
+  +'<li><b>Do:</b> when you see one accuracy number, ask “tested on whom?” <b>Why:</b> a headline score is an average, and it takes its weights from whoever was in the test.</li>'
+  +'<li><b>Do:</b> before you rely on an AI tool, try it on your own kind of case: your voice, your handwriting, your subject. <b>Why:</b> the score for cases like yours can sit far from the headline.</li></ul>'
+  +'<div class="tell"><label for="tell">A company says its AI is 95% accurate. Write two questions you would ask before you believe it works for you.</label><textarea id="tell" placeholder="Write them in your own words.">'+esc(S.explain)+'</textarea>'
+  +'<div class="acts"><button type="button" class="btn primary" id="copy">Copy my answers for Canvas</button><span class="copied" id="copied" role="status"></span></div></div>'
+  +(window.NEXT_HTML||'');}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function answersText(){const g1={no:'no, 95% means 95%',ten:'at worst 1 in 10',yes:'yes, it could'},g4={half:'about half',two:'about two-thirds',8:'more than 8 in 10'};
+  return ['Raider AILab: The Mirror','1. Could software that is 95% right overall be wrong 1 time in 3 for one group? My guess: '+(S.g1?g1[S.g1]:'(skipped)')+'. Answer: yes. It was right 99.7% of the time for lighter-skinned men and 65.3% for darker-skinned women.',
+   '2. I moved darker-skinned women in the test from 0 to 100 photos. Last setting: '+S.df+' of 100, headline '+headline(mixDF(S.df)).toFixed(1)+'%. The software stayed the same.',
+   '3. Share of white faces in the test behind a 97% headline: my guess '+(S.g4?g4[S.g4]:'(skipped)')+'. Answer: more than 83 in 100.',
+   '4. Grade with homework 20% at 100 and tests 80% at 70: '+(S.xferAns==null?'(skipped)':S.xferAns+'%'+(S.xferRight&&S.xferTries===1?' (correct)':'; the answer is 76%')),
+   '5. My two questions: '+(S.explain.trim()||'(blank)')].join('\n');}
+function wireFinal(){$('tell').addEventListener('input',e=>{S.explain=e.target.value;});
+  $('copy').addEventListener('click',()=>{const t=answersText(),done=()=>{$('copied').textContent='Copied. Paste it into Canvas.';},fall=()=>{let b=$('copybox');if(!b){b=document.createElement('textarea');b.id='copybox';b.readOnly=true;b.setAttribute('aria-label','Your answers');$('tell').parentElement.appendChild(b);}b.value=t;b.focus();b.select();$('copied').textContent='Select all of this and copy it.';};
+    try{navigator.clipboard.writeText(t).then(done,fall);}catch(e){fall();}});}
+function resetAll(){Object.assign(S,{stage:0,maxStage:0,g1:null,split:false,df:4,sawHigh:false,sawZero:false,g4:null,her:false,fstep:0,xferTries:0,xferDone:false,xferAns:null,xferRight:false,explain:''});go(0);window.scrollTo(0,0);}
+
+let rz=null;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(Math.abs(Math.floor(cv.parentElement.clientWidth)-W)>1){resize();enter(S.stage);ui();}},120);});
+readColors();steps();ui();resize();enter(0);ui();resize();
+requestAnimationFrame(tick);
+window.NW={get L(){return L;},S,V,go,headline,mixDF,norm,IJB,PPB,EQ,GROUPS,answersText};   /* for the test script */
+})();
+</script>
+<!-- Anonymous page-view count (GoatCounter, rjedtech.goatcounter.com): no cookies, no personal data, no form contents. -->
+<script data-goatcounter="https://rjedtech.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
