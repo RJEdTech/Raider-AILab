@@ -117,7 +117,7 @@ details.more ul{padding-left:20px}
 
 <main class="wrap">
   <div class="top">
-    <div><p class="eyebrow">How a language model works</p><h2>Next Word: why the bot said 3:30</h2></div>
+    <div><div class="sh-top"><p class="eyebrow">How a language model works</p><div class="sh-bar" id="shbar"></div></div><h2>Next Word: why the bot said 3:30</h2></div>
     <ol class="steps" id="steps" aria-label="Steps"></ol>
   </div>
 
@@ -128,6 +128,7 @@ details.more ul{padding-left:20px}
         <span class="kick" id="kick"></span>
         <p id="cap" aria-live="polite"></p>
         <div id="extra"></div>
+        <div class="sh-help" id="shhelp" role="region" aria-label="Help with this step" hidden></div>
       </div>
       <div class="acts" id="acts"></div>
     </div>
@@ -145,6 +146,7 @@ details.more ul{padding-left:20px}
 </main>
 
 <script>window.NEXT_HTML='<p class="nextlink"><a class="btn primary" href="score-the-bot.html">Next: Score the Bot. Who taught it to bluff? →</a></p>';</script>
+<script src="story-help.js?v=202611212000"></script>
 <script>
 (()=>{'use strict';
 /* ================= data: the whole "training set" ================= */
@@ -497,7 +499,7 @@ function enter(n,instant){
   if(n===7){V.z=S.zoom;V.finalA=1;}
 }
 function alignView(soft){try{const r=cv.getBoundingClientRect();if(L.tall){const bar=$('acts').parentElement;if(bar.classList.contains('final'))return;const barH=bar.offsetHeight,want=Math.max(0,r.top+window.scrollY+H-(window.innerHeight-barH)+4);if(!soft||Math.abs(want-window.scrollY)>6)window.scrollTo({top:want,behavior:RM?'auto':'smooth'});}else if(r.top<0||r.bottom>window.innerHeight+140){window.scrollTo({top:Math.max(0,r.top+window.scrollY-8),behavior:RM?'auto':'smooth'});}}catch(e){}}
-function go(n){S.stage=n;S.maxStage=Math.max(S.maxStage,n);enter(n,false);steps();ui();alignView();}
+function go(n){S.stage=n;S.maxStage=Math.max(S.maxStage,n);enter(n,false);steps();ui();alignView();if(window.StoryHelp)StoryHelp.step();}
 
 /* ---- stage 1: the miss ---- */
 async function pickGuess(g){if(busy||S.guess)return;S.guess=g;busy=true;ui();
@@ -636,6 +638,7 @@ let rz=null;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout
 /* ================= start ================= */
 readColors();steps();ui();resize();enter(0,true);ui();resize();enter(0,true);
 requestAnimationFrame(tick);
+if(window.StoryHelp){StoryHelp.init({id:'nextword',title:'Next Word',beat:()=>S.stage,go,help:[{"ask": "Pick what you think the bot will say: 3:30, 6 or lunch. A guess is fine.", "another": "The bot learned only from this chat. Look at the chat: which time shows up most often after the word “at”? Which one is newest?"}, {"ask": "Press Catch the next word until all ten words after “at” are on their piles.", "another": "Every time someone wrote “at”, the next word gets counted. The piles are a tally, like counting votes."}, {"ask": "Pick how much of the line of ten tiles says 3:30.", "another": "Count the blue 3:30 tiles out of all 10. 6 out of 10 is the same as 60 out of 100, so 60%."}, {"ask": "Press Spin and watch where the wheel lands. Keep spinning to see which slice wins most often.", "another": "The wheel is the same line bent into a circle, so 3:30 still takes 60% of it. The bot doesn’t look anything up. It lands where chance takes it, and big slices win more often."}, {"ask": "Press Next word to let the bot build a sentence one word at a time. Then write a few more.", "another": "For every word, the bot makes a new wheel from what came after that word in the chat, and spins. Each piece sounds right, so the whole sentence sounds right, even when it isn’t true."}, {"ask": "Slide the temperature all the way to cold, then all the way to hot.", "another": "Cold makes the biggest slice even bigger, so the bot picks it almost every time. Hot evens the slices out, so it takes more chances. Neither one tells the bot which message is newest."}, {"ask": "Press Show the math, then try one problem with only numbers.", "another": "It is the same as the tiles: the times “at 3:30” appears, divided by the times “at” appears. For “is late”: 5 out of 20."}, {"ask": "Zoom out to see how much a real chatbot has read. Then answer the last question and copy your answers.", "another": "A real chatbot read billions of chats instead of ten, so its wheels are much better. But the last step is the same: it bets on what is likely, and nothing in that step checks that it is true."}]});StoryHelp.step();}
 window.NW={get L(){return L;},writeAnother,S,V,go,model,judge,shares,AT,answersText,pickAt,spinOnce,END};   /* for the test script */
 })();
 </script>

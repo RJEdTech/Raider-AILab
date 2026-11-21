@@ -119,7 +119,7 @@ details.more ul{padding-left:20px}
 
 <main class="wrap">
   <div class="top">
-    <div><p class="eyebrow">Goals shape behavior</p><h2>Score the Bot: who taught it to bluff?</h2></div>
+    <div><div class="sh-top"><p class="eyebrow">Goals shape behavior</p><div class="sh-bar" id="shbar"></div></div><h2>Score the Bot: who taught it to bluff?</h2></div>
     <ol class="steps" id="steps" aria-label="Steps"></ol>
   </div>
 
@@ -130,6 +130,7 @@ details.more ul{padding-left:20px}
         <span class="kick" id="kick"></span>
         <p id="cap" aria-live="polite"></p>
         <div id="extra"></div>
+        <div class="sh-help" id="shhelp" role="region" aria-label="Help with this step" hidden></div>
       </div>
       <div class="side"><div id="ctl"></div><div class="acts" id="acts"></div></div>
     </div>
@@ -148,6 +149,7 @@ details.more ul{padding-left:20px}
 </main>
 
 <script>window.NEXT_HTML='<p class="nextlink"><a class="btn primary" href="the-mirror.html">Next: The Mirror. 95% right, for whom? →</a> <a class="btn" href="next-word.html">← Before this: Next Word</a></p>';</script>
+<script src="story-help.js?v=202611212000"></script>
 <script>
 (()=>{'use strict';
 /* ================= Score the Bot: the numbers ================= */
@@ -384,7 +386,7 @@ function enter(n){stopAll();busy=false;for(const k in V)delete V[k];
   if(n===6){V.scoreA=S.g7?1:0;}}
 function alignView(soft){try{const r=cv.getBoundingClientRect();if(L.tall){const bar=BAR;if(bar.classList.contains('final'))return;const barH=bar.offsetHeight,want=Math.max(0,r.top+window.scrollY+H-(window.innerHeight-barH)+4);if(!soft||Math.abs(want-window.scrollY)>6)window.scrollTo({top:want,behavior:RM?'auto':'smooth'});}
   else if(!soft&&(r.top<0||r.bottom>window.innerHeight+140)){window.scrollTo({top:Math.max(0,r.top+window.scrollY-8),behavior:RM?'auto':'smooth'});}}catch(e){}}
-function go(n){S.stage=n;S.maxStage=Math.max(S.maxStage,n);enter(n);steps();ui();alignView();}
+function go(n){S.stage=n;S.maxStage=Math.max(S.maxStage,n);enter(n);steps();ui();alignView();if(window.StoryHelp)StoryHelp.step();}
 
 async function pickQuiz(v){if(busy||S.quiz)return;S.quiz=v;busy=true;ui();await anim(600,p=>V.rev=p);busy=false;ui();}
 function pickG2(v){if(S.g2)return;S.g2=v;ui();}
@@ -487,6 +489,7 @@ cv.addEventListener('mousemove',e=>{const r=cv.getBoundingClientRect(),x=(e.clie
 let rz=null;window.addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{if(Math.abs(Math.floor(cv.parentElement.clientWidth)-W)>1){resize();enter(S.stage);ui();}},120);});
 readColors();steps();ui();resize();enter(0);ui();resize();
 requestAnimationFrame(tick);
+if(window.StoryHelp){StoryHelp.init({id:'scorebot',title:'Score the Bot',beat:()=>S.stage,go,help:[{"ask": "Pick an answer to a quiz question you can’t know, or pick I don’t know.", "another": "Under this rule a wrong answer costs nothing and “I don’t know” earns nothing. Which choice can only help you?"}, {"ask": "Answer the question, then press Play 10 tries and move the confidence slider.", "another": "Each tile is one try. Green is right (+1) and red is wrong (0). Even a few green tiles beat zero, so under this rule the bot should always guess."}, {"ask": "Press Add up your side to see what the bot’s answers did to you.", "another": "The bot counts only its right answers. You live with the wrong ones too. Count each green chip as +1 for you and each red one as −1."}, {"ask": "Make a wrong answer cost a point, then slide the bot’s confidence up to find where answering pays.", "another": "With wrong = −1, a guess pays only when it is right more often than wrong. That happens past 50% sure."}, {"ask": "Move the slider to change how many points a wrong answer costs, and watch the right and wrong answers change.", "another": "A bigger penalty makes the bot answer only when it is more sure: fewer wrong answers, but also fewer right ones. Look for the rule that helps you most."}, {"ask": "Press Show the math, then work out how sure the bot must be when a wrong answer costs 3.", "another": "One wrong answer costs 3, so it takes 3 right answers to make up for it: 3 right out of 4 tries, which is 75%."}, {"ask": "Pick which real model ranks higher, then score them as right minus wrong. Finish with your own answer.", "another": "A leaderboard that counts only right answers rewards guessing. Subtract the wrong answers, and the model that said “I don’t know” more often comes out ahead."}]});StoryHelp.step();}
 window.NW={get L(){return L;},S,V,go,quizOutcome,answersText,MODELS};   /* for the test script */
 })();
 </script>
