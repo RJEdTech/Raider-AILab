@@ -5,6 +5,137 @@
    group: optional heading that replaces "Week of …" */
 window.RAIDER_NEWS = [
  {
+  "id": "dublin-ai-flood-warning-2026",
+  "week": "2026-11-22",
+  "side": "good",
+  "date": "2026-11-16",
+  "title": "Dublin pilots an AI flood warning system that gave up to 21 hours' notice in tests on past floods",
+  "summary": "An AI early-warning system for flooding began a pilot in Dublin, Ireland, the week of November 16, running through the autumn and winter. It looks for patterns in river, rain and tide sensors and in weather data, and council staff review every alert before acting.",
+  "numbers": [
+   "Built on 10 years of sensor data from the council's flood monitoring network, plus river levels, rainfall, tides and Met Éireann weather data (<a href=\"https://www.thejournal.ie/dublin-ai-flood-warning-system-7227372-Nov2026/\" target=\"_blank\" rel=\"noopener\">TheJournal.ie, Nov 16, 2026</a>).",
+   "In trials on past events, it would have warned 13 to 21 hours ahead of certain floods driven by mountain rain; company-reported by EMR Integrated Solutions (<a href=\"https://www.thejournal.ie/dublin-ai-flood-warning-system-7227372-Nov2026/\" target=\"_blank\" rel=\"noopener\">TheJournal.ie, Nov 16, 2026</a>).",
+   "Every alert is reviewed and interpreted by council staff before action is taken (<a href=\"https://www.thejournal.ie/dublin-ai-flood-warning-system-7227372-Nov2026/\" target=\"_blank\" rel=\"noopener\">TheJournal.ie, Nov 16, 2026</a>).",
+   "No accuracy, missed-flood or false-alarm rates were published (<a href=\"https://www.thejournal.ie/dublin-ai-flood-warning-system-7227372-Nov2026/\" target=\"_blank\" rel=\"noopener\">TheJournal.ie, Nov 16, 2026</a>).",
+   "Worldwide, 136 countries (70%) now report having multi-hazard early warning systems; countries with substantial to comprehensive systems have disaster death rates 6.1 times lower than countries with limited ones (<a href=\"https://news.un.org/en/story/2026/11/1168787\" target=\"_blank\" rel=\"noopener\">UN News, reporting a UNDRR and WMO report, Nov 11, 2026</a>)."
+  ],
+  "concept": {
+   "title": "Lead time is not enough: hits and false alarms",
+   "html": "A warning system can be judged three ways. <b>Lead time</b>: how early does it warn? <b>Hit rate</b>: of the real floods, what share did it warn about? <b>Share of alerts that are real</b> (precision): of all the alerts, how many were followed by a flood? A system that warns of everything has a perfect hit rate and useless alerts. The Dublin trial reported only lead time, so two of the three numbers are missing."
+  },
+  "hook": {
+   "prompt": "Part (a) assumes, as a teaching example, that a sensor records once every 15 minutes. Parts (b) and (c) use made-up teaching numbers: in a test on 20 past floods, a system warned before 17 of them and also raised 6 false alarms.",
+   "parts": [
+    {
+     "label": "(a) How many readings does one sensor make in 10 years? (Use 365.25 days per year.)",
+     "answer": 350640,
+     "tol": 1,
+     "unit": "readings"
+    },
+    {
+     "label": "(b) What is the hit rate?",
+     "answer": 85,
+     "tol": 0.2,
+     "unit": "%"
+    },
+    {
+     "label": "(c) What percent of all alerts were followed by a real flood?",
+     "answer": 73.9,
+     "tol": 0.3,
+     "unit": "%"
+    }
+   ],
+   "worked": "(a) 10 &times; 365.25 &times; 24 &times; 4 = <b>350,640 readings</b> per sensor, which is why a computer is good at searching them for patterns. (b) 17 &divide; 20 = <b>85%</b>; 3 floods were missed. (c) Alerts = 17 + 6 = 23. 17 &divide; 23 = 0.739, about <b>73.9%</b>. Ask any warning system for all three numbers."
+  },
+  "hides": "The 13 to 21 hours comes from the company's own tests on past floods, not a live season, and only for one kind of flood. Missed floods and false alarms were not reported. The UN's 6.1 times figure compares countries, which differ in many ways besides warning systems, so it shows an association, not proof that warnings alone cut deaths.",
+  "evidence": "Preliminary: a company-reported pilot described in a news article, with a government minister's comment. No independent evaluation yet. The UN figure is from a UN agency report, not a peer-reviewed study.",
+  "investigate": "The UN's <a href=\"https://www.un.org/en/climatechange/early-warnings-for-all\" target=\"_blank\" rel=\"noopener\">Early Warnings for All</a> initiative aims to cover everyone by 2027. Find out what four parts it says a full warning system needs. Which part would AI help with, and which need people?",
+  "ask": [
+   "Ten years of the council's flood sensor data plus weather data (company-reported).",
+   "How early it would have warned of past floods: 13 to 21 hours in tests (company-reported).",
+   "No: the method and test results are not public.",
+   "Yes: council staff review every alert before acting.",
+   "A missed flood could damage homes and roads; a false alarm costs crew time. Who pays: unknown.",
+   "Not applicable: it does not make decisions about individuals.",
+   "Unknown: the number of people in the pilot area was not given."
+  ],
+  "related": [
+   {
+    "href": "index.html#detector",
+    "label": "Detector check"
+   },
+   {
+    "href": "index.html#frontier",
+    "label": "The jagged frontier"
+   }
+  ]
+ },
+ {
+  "id": "oregon-sues-openai-teens-2026",
+  "week": "2026-11-22",
+  "side": "harm",
+  "date": "2026-11-17",
+  "title": "Oregon sues OpenAI, alleging ChatGPT was marketed as safe for teens without working safeguards",
+  "summary": "Oregon's Department of Justice sued OpenAI on November 17, alleging the company misrepresented ChatGPT as safe for young users and knew its protections for minors could be easily bypassed. These are allegations; no court has ruled (checked November 22, 2026).",
+  "numbers": [
+   "The 53-page complaint alleges willful violations of Oregon's Unlawful Trade Practices Act (<a href=\"https://www.opb.org/article/2026/11/17/oregon-ag-sues-openai-claims-company-knowingly-endangers-teens/\" target=\"_blank\" rel=\"noopener\">OPB, Nov 17, 2026</a>).",
+   "Oregon seeks at least $2.035 billion in damages; the article does not say how that figure was calculated (<a href=\"https://www.opb.org/article/2026/11/17/oregon-ag-sues-openai-claims-company-knowingly-endangers-teens/\" target=\"_blank\" rel=\"noopener\">OPB, Nov 17, 2026</a>).",
+   "ChatGPT allows users as young as 13 with a parent's or guardian's consent; the complaint alleges the company often fails to confirm that consent (<a href=\"https://www.opb.org/article/2026/11/17/oregon-ag-sues-openai-claims-company-knowingly-endangers-teens/\" target=\"_blank\" rel=\"noopener\">OPB, Nov 17, 2026</a>).",
+   "The complaint alleges the teen version's safeguards are \"easily bypassed\" and did not alert parents when teens asked about risky topics (alleged, <a href=\"https://www.opb.org/article/2026/11/17/oregon-ag-sues-openai-claims-company-knowingly-endangers-teens/\" target=\"_blank\" rel=\"noopener\">OPB, Nov 17, 2026</a>).",
+   "Oregon's Attorney General said no specific incident in Oregon led to the suit; eight other states sued OpenAI in October (<a href=\"https://www.opb.org/article/2026/11/17/oregon-ag-sues-openai-claims-company-knowingly-endangers-teens/\" target=\"_blank\" rel=\"noopener\">OPB, Nov 17, 2026</a>).",
+   "OpenAI said it will keep working with experts and building safeguards such as parental controls, break reminders and age-appropriate protections (<a href=\"https://www.opb.org/article/2026/11/17/oregon-ag-sues-openai-claims-company-knowingly-endangers-teens/\" target=\"_blank\" rel=\"noopener\">OPB, Nov 17, 2026</a>)."
+  ],
+  "concept": {
+   "title": "A safety chain is only as strong as each check",
+   "html": "A sign-up that asks \"Do you have a parent's permission?\" is a check only if someone verifies the answer. For a false claim to slip through, two things must happen: the claim is false, <b>and</b> it is not checked. Multiply the chances: P(slip) = P(false) &times; P(not checked). A system that checks 1 in 5 claims leaves 80% of false claims standing, however good the rest of its design."
+  },
+  "hook": {
+   "prompt": "No real sign-up numbers were published, so use made-up teaching numbers. An app gets 10,000 teen sign-ups. 60% say a parent gave permission. The app verifies only 1 in 5 of those claims. Assume 15% of the claims are false.",
+   "parts": [
+    {
+     "label": "(a) How many permission claims are never verified?",
+     "answer": 4800,
+     "tol": 1,
+     "unit": "claims"
+    },
+    {
+     "label": "(b) About how many false claims slip through unchecked?",
+     "answer": 720,
+     "tol": 1,
+     "unit": "claims"
+    },
+    {
+     "label": "(c) What percent of all 10,000 sign-ups had their permission verified?",
+     "answer": 12,
+     "tol": 0.1,
+     "unit": "%"
+    }
+   ],
+   "worked": "(a) Claims: 0.60 &times; 10,000 = 6,000. Unverified: 6,000 &times; 0.80 = <b>4,800</b>. (b) 4,800 &times; 0.15 = <b>720 false claims</b> that look the same as real ones. (c) Verified: 6,000 &times; 0.20 = 1,200, and 1,200 &divide; 10,000 = <b>12%</b>."
+  },
+  "hides": "A lawsuit tells you what one side says it can prove, not what a court has found. The $2.035 billion figure is what Oregon asks for, not a fine anyone has been ordered to pay. The hook's numbers are made up because neither side has published real sign-up or verification data. Chatbots also help many teens with homework and questions, which a suit about harms does not measure.",
+  "evidence": "Pending lawsuit (alleged), checked November 22, 2026, read through one news report. The complaint itself was not read. The court was not named in the coverage.",
+  "investigate": "Common Sense Media publishes <a href=\"https://www.commonsensemedia.org/ai-ratings\" target=\"_blank\" rel=\"noopener\">AI risk ratings</a> for popular AI tools. Pick one tool you use. What age does it say the tool is for, and how does the tool check a user's age?",
+  "ask": [
+   "Not public in detail.",
+   "Not public; the lawsuit questions whether teen safety was tested well enough (alleged).",
+   "No: the model and its safety testing are not public.",
+   "Parents are supposed to consent, but the complaint alleges consent often is not confirmed.",
+   "The complaint alleges teens are harmed; Oregon seeks at least $2.035 billion; no ruling yet (checked Nov 22, 2026).",
+   "Users can report problems to the company; the state is using the courts.",
+   "Unknown: the suit named no count of Oregon users."
+  ],
+  "related": [
+   {
+    "href": "index.html#companion",
+    "label": "Why does an AI companion feel like a friend?"
+   },
+   {
+    "href": "index.html#gamegoal",
+    "label": "Game the goal"
+   }
+  ]
+ },
+ {
   "id": "alphagenome-2-2026",
   "week": "2026-11-15",
   "side": "good",
