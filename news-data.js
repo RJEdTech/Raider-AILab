@@ -4,6 +4,256 @@
    side: 'good' | 'harm' | 'both'   ask: [7 short answers, in the order of the 7 questions]
    group: optional heading that replaces "Week of …" */
 window.RAIDER_NEWS = [
+ {
+  "id": "alphagenome-2-2026",
+  "week": "2026-11-15",
+  "side": "good",
+  "date": "2026-11-11",
+  "title": "An AI model predicts which DNA changes switch genes on or off in specific cell types",
+  "summary": "Google DeepMind released AlphaGenome 2, which predicts how changes in non-coding DNA (the part that does not code for proteins) affect gene activity in particular types of cells. Researchers can use it to narrow down where a disease starts. It is a research tool, not a medical test.",
+  "numbers": [
+   "Trained on single-cell data from more than 100 million cells across 68 tissues (<a href=\"https://www.nature.com/articles/d41586-026-03673-0\" target=\"_blank\" rel=\"noopener\">Nature news, Nov 11, 2026</a>).",
+   "Makes predictions for 637 human and 311 mouse cell types (<a href=\"https://www.nature.com/articles/d41586-026-03673-0\" target=\"_blank\" rel=\"noopener\">Nature news, Nov 11, 2026</a>).",
+   "Non-coding DNA is about 98% of the human genome (<a href=\"https://www.nature.com/articles/d41586-026-03673-0\" target=\"_blank\" rel=\"noopener\">Nature news, Nov 11, 2026</a>).",
+   "On one immune-cell test set, it found 30% of likely causal variants at 90% precision, against 16% for the first AlphaGenome; company-reported (<a href=\"https://www.unite.ai/google-deepminds-alphagenome-2-predicts-cell-state-variant-effects/\" target=\"_blank\" rel=\"noopener\">Unite.AI, Nov 11, 2026</a>).",
+   "An outside scientist said a lab experiment that took about 1.5 years reached a related answer in about 30 minutes with the model (<a href=\"https://www.nature.com/articles/d41586-026-03673-0\" target=\"_blank\" rel=\"noopener\">Nature news, Nov 11, 2026</a>)."
+  ],
+  "concept": {
+   "title": "Precision and recall",
+   "html": "<b>Recall</b> asks: of all the real answers, what share did the model find? <b>Precision</b> asks: of everything the model flagged, what share was right? A model can have high precision and low recall: it is usually right when it speaks up, but it misses most of what is there. Both numbers matter, and a tool reported with only one of them is only half described."
+  },
+  "hook": {
+   "prompt": "Imagine a test set with 1,000 DNA variants that truly cause a change in gene activity. Use the company-reported 30% recall and 90% precision.",
+   "parts": [
+    {
+     "label": "(a) How many of the 1,000 real variants does the model find?",
+     "answer": 300,
+     "tol": 0.5,
+     "unit": "variants"
+    },
+    {
+     "label": "(b) If 90% of its flags are correct, how many variants does it flag in total?",
+     "answer": 333,
+     "tol": 1,
+     "unit": "variants"
+    },
+    {
+     "label": "(c) How many times the first model's recall (16%) is the new 30%?",
+     "answer": 1.875,
+     "tol": 0.02,
+     "unit": "times"
+    }
+   ],
+   "worked": "(a) 0.30 &times; 1,000 = <b>300 found</b>, so 700 are missed. (b) 300 correct flags are 90% of all flags: 300 &divide; 0.90 = <b>333 flags</b>, about 33 of them wrong. (c) 30 &divide; 16 = <b>1.875 times</b>. Nearly double, and it still misses 7 in 10."
+  },
+  "hides": "The best results come from one test set chosen and scored by the company, in a preprint that had not been peer reviewed. A prediction is a lead, not proof: researchers still have to test it in the lab. The model finds a minority of the variants, and some cell types are poorly represented in its training data.",
+  "evidence": "Preliminary: a company release and preprint, with independent reporting and an outside expert's comment in <i>Nature</i>'s news section. The performance figures are company-reported. DeepMind's own post could not be opened by this automated run.",
+  "investigate": "The <a href=\"https://www.ebi.ac.uk/gwas/\" target=\"_blank\" rel=\"noopener\">GWAS Catalog</a> lists DNA variants linked to traits. Search a trait such as height or asthma. How many variants are listed, and why might it be hard to tell which ones actually cause the trait?",
+  "ask": [
+   "Single-cell data from more than 100 million human and mouse cells in 68 tissues.",
+   "Finding likely causal variants in one immune-cell dataset, scored by the developer.",
+   "Partly: a technical preprint is public; open model weights were not mentioned.",
+   "Yes: researchers check its predictions with lab experiments; it is not used to diagnose patients.",
+   "Researchers lose time and money chasing the wrong variant; patients are not directly affected.",
+   "Not applicable: it makes no decisions about people.",
+   "Unknown: the number of research users is not public."
+  ],
+  "related": [
+   {
+    "href": "index.html#frontier",
+    "label": "The jagged frontier"
+   },
+   {
+    "href": "index.html#coauthor",
+    "label": "Co-author with AI"
+   }
+  ]
+ },
+ {
+  "id": "uk-facial-recognition-inspection-2026",
+  "week": "2026-11-15",
+  "side": "harm",
+  "date": "2026-11-12",
+  "title": "UK police inspectors warn that facial recognition searches risk wrongful arrests",
+  "summary": "His Majesty's Inspectorate of Constabulary and Fire &amp; Rescue Services (HMICFRS) reviewed how police in England and Wales and the National Crime Agency use retrospective facial recognition: searching photos from cameras against police image databases. Inspectors found some investigators treated a match as evidence instead of a lead and skipped checks, and that the system was more likely to wrongly flag people from ethnic minority groups.",
+  "numbers": [
+   "16 recommendations in the inspection report (<a href=\"https://bigbrotherwatch.org.uk/press-releases/big-brother-watch-response-to-watchdog-warning-that-facial-recognition-risks-wrongful-arrests/\" target=\"_blank\" rel=\"noopener\">Big Brother Watch response, Nov 12, 2026</a>; <a href=\"https://www.yahoo.com/news/politics/articles/facial-recognition-cameras-risk-wrongful-061500316.html\" target=\"_blank\" rel=\"noopener\">The Telegraph via Yahoo, Nov 12, 2026</a>).",
+   "Live facial recognition is already used by 13 police forces; a Home Office proposal would extend it to all 43 forces in England and Wales (<a href=\"https://www.yahoo.com/news/politics/articles/facial-recognition-cameras-risk-wrongful-061500316.html\" target=\"_blank\" rel=\"noopener\">The Telegraph via Yahoo, Nov 12, 2026</a>).",
+   "Inspectors could not tell whether bias contributed to any wrongful arrest, because the data needed was not kept (<a href=\"https://www.yahoo.com/news/politics/articles/facial-recognition-cameras-risk-wrongful-061500316.html\" target=\"_blank\" rel=\"noopener\">The Telegraph via Yahoo, Nov 12, 2026</a>).",
+   "Custody images that should have been deleted were still being searched (<a href=\"https://www.aol.co.uk/articles/facial-recognition-errors-put-ethnic-000103000.html\" target=\"_blank\" rel=\"noopener\">The Guardian via AOL, Nov 12, 2026</a>).",
+   "Public support for police use was 91% in one 2025 survey and 53% in another, depending on who asked and how (<a href=\"https://www.theregister.com/security/2026/11/13/brit-police-watchdog-says-cops-use-of-facial-recog-risks-wrongful-arrests/5309379\" target=\"_blank\" rel=\"noopener\">The Register, Nov 13, 2026</a>)."
+  ],
+  "concept": {
+   "title": "Base rates: why most alerts can be wrong",
+   "html": "When almost everyone searched is innocent, even a small false-match rate produces many false alerts. If a system scans N people with a false-match rate f, it makes about N &times; f false alerts. Compare that with the number of real matches: when the real matches are rare, false alerts can outnumber them. That is why a match should start an investigation, never end one."
+  },
+  "hook": {
+   "prompt": "No real error rates were published, so use made-up teaching numbers. A camera checks 100,000 faces against a watchlist. 10 of those people are really on the list, and the system catches all 10. It also falsely matches 1 in every 1,000 innocent people. Part (c) uses the real numbers above.",
+   "parts": [
+    {
+     "label": "(a) About how many false alerts?",
+     "answer": 100,
+     "tol": 1,
+     "unit": "alerts"
+    },
+    {
+     "label": "(b) What percent of all alerts are real matches?",
+     "answer": 9.1,
+     "tol": 0.2,
+     "unit": "%"
+    },
+    {
+     "label": "(c) What percent of the 43 forces already use live facial recognition?",
+     "answer": 30.2,
+     "tol": 0.3,
+     "unit": "%"
+    }
+   ],
+   "worked": "(a) Innocent people: 100,000 &minus; 10 = 99,990. 99,990 &times; 0.001 = 99.99, about <b>100 false alerts</b>. (b) Real alerts &divide; all alerts = 10 &divide; (10 + 100) = 0.091, about <b>9.1%</b>. More than 9 of every 10 alerts are wrong, even though the system is \"99.9% accurate\" on innocent faces. (c) 13 &divide; 43 = 0.302, about <b>30.2%</b>."
+  },
+  "hides": "The inspection report itself gave no false-match rates or error rates by group in the coverage read here, so the hook uses made-up numbers. \"Bias\" means the error rate differs between groups; inspectors could not measure its real-world effect because records were missing. Survey results on public support depend heavily on how the question is asked.",
+  "evidence": "Strong source: an official government inspection. But this run read only news coverage and a campaign group's response; the HMICFRS report itself could not be opened, so its exact title and figures are not verified here.",
+  "investigate": "The US National Institute of Standards and Technology runs the <a href=\"https://www.nist.gov/programs-projects/face-recognition-vendor-test-frvt\" target=\"_blank\" rel=\"noopener\">Face Recognition Vendor Test</a>. Find what it says about how false-match rates differ between demographic groups and between algorithms.",
+  "ask": [
+   "Not public.",
+   "Not public in the coverage; research cited shows higher error rates for some groups.",
+   "No: inspectors found gaps in how searches were recorded and overseen.",
+   "It is supposed to, but inspectors found some investigators treated matches as evidence and skipped checks.",
+   "The wrongly flagged person pays first; inspectors could not count wrongful arrests because data was missing.",
+   "No clear route; the Home Office has proposed new independent oversight.",
+   "Anyone whose photo is in a searchable police database; the exact number is not public."
+  ],
+  "related": [
+   {
+    "href": "index.html#blackbox",
+    "label": "Can you see why?"
+   },
+   {
+    "href": "index.html#detector",
+    "label": "Detector check"
+   }
+  ]
+ },
+ {
+  "id": "data-center-grid-costs-2026",
+  "week": "2026-11-15",
+  "side": "harm",
+  "date": "2026-11-09",
+  "title": "Study: households pay most of the power grid costs tied to data center growth",
+  "summary": "Cornell University researchers, publishing in <i>Nature Energy</i>, studied four major US power grids from 2020 to 2025, including about 4,000 existing and proposed data centers, many built for AI. They found data centers paid only about 38% of the grid costs linked to their own growth, with most of the rest falling on households.",
+  "numbers": [
+   "Data centers paid $3.12 billion of $8.25 billion in growth-linked grid costs in 2025; $5.13 billion fell largely on residents (<a href=\"https://news.cornell.edu/stories/2026/11/data-centers-need-power-lower-income-rural-residents-pay-price\" target=\"_blank\" rel=\"noopener\">Cornell Chronicle, Nov 9, 2026</a>).",
+   "Transmission investment rose from $2 billion in 2020 to $34 billion in 2025 (<a href=\"https://news.cornell.edu/stories/2026/11/data-centers-need-power-lower-income-rural-residents-pay-price\" target=\"_blank\" rel=\"noopener\">Cornell Chronicle, Nov 9, 2026</a>).",
+   "Wholesale electricity prices rose about 15% in Virginia and about 20% in the southern San Francisco Bay Area by 2025 (<a href=\"https://news.cornell.edu/stories/2026/11/data-centers-need-power-lower-income-rural-residents-pay-price\" target=\"_blank\" rel=\"noopener\">Cornell Chronicle, Nov 9, 2026</a>).",
+   "The share of rural families spending more than 6% of income on energy rose 76% more than the urban share (<a href=\"https://news.cornell.edu/stories/2026/11/data-centers-need-power-lower-income-rural-residents-pay-price\" target=\"_blank\" rel=\"noopener\">Cornell Chronicle, Nov 9, 2026</a>).",
+   "The authors suggest charging data centers for the demand they add and cutting their use in about 22 peak hours a year (<a href=\"https://news.cornell.edu/stories/2026/11/data-centers-need-power-lower-income-rural-residents-pay-price\" target=\"_blank\" rel=\"noopener\">Cornell Chronicle, Nov 9, 2026</a>)."
+  ],
+  "concept": {
+   "title": "Who pays: shares and growth factors",
+   "html": "A <b>share</b> is a part divided by the whole. A <b>growth factor</b> is new &divide; old. To find the steady yearly rate that would produce that growth over n years, take the n-th root: rate = (new &divide; old)<sup>1/n</sup> &minus; 1. AI runs on electricity, so the cost of the grid that delivers it is part of the cost of AI, even when it does not show up in the price of an app."
+  },
+  "hook": {
+   "prompt": "Use the study's numbers.",
+   "parts": [
+    {
+     "label": "(a) What percent of the $8.25 billion did data centers pay?",
+     "answer": 37.8,
+     "tol": 0.3,
+     "unit": "%"
+    },
+    {
+     "label": "(b) Transmission investment went from $2 billion to $34 billion. What is the growth factor?",
+     "answer": 17,
+     "tol": 0.05,
+     "unit": "times"
+    },
+    {
+     "label": "(c) What steady yearly growth rate over 5 years gives that factor?",
+     "answer": 76.2,
+     "tol": 0.6,
+     "unit": "% per year"
+    }
+   ],
+   "worked": "(a) 3.12 &divide; 8.25 = 0.378, about <b>37.8%</b>; residents and other customers paid the other 62%. (b) 34 &divide; 2 = <b>17 times</b>. (c) 17<sup>1/5</sup> = 1.762, so about <b>76.2% a year</b>. Check: 2 &times; 1.762<sup>5</sup> = 34."
+  },
+  "hides": "Transmission spending rises for many reasons, not only data centers, and the study's model has to decide which costs to link to them. Some regions (New York and New England) showed no clear increase. A Washington Post analysis published Nov 6, 2026 argued data centers may not be raising most Americans' bills much; it could not be opened for this page, so its numbers are not included. Data centers serve many uses besides AI.",
+  "evidence": "Moderate: a peer-reviewed study in <i>Nature Energy</i>, read through the university's news release, not the paper itself. The modeling assumptions and uncertainty ranges were not checked.",
+  "investigate": "The <a href=\"https://www.eia.gov/electricity/data/browser/\" target=\"_blank\" rel=\"noopener\">EIA Electricity Data Browser</a> shows the average residential electricity price by state. How has Colorado's price changed since 2020? Compare it with Virginia's.",
+  "ask": [
+   "Not applicable: this is about the power AI runs on, not one model.",
+   "Not applicable; the study measured who paid grid costs.",
+   "Partly: utility rate filings are public, but many data centers do not disclose their power use.",
+   "State utility regulators approve the rates customers pay.",
+   "Residents, especially lower-income and rural households, pay much of the cost, the study finds.",
+   "Yes, in a way: through public comment in state utility rate cases.",
+   "Households on four major US power grids; a total count was not given."
+  ],
+  "related": [
+   {
+    "href": "index.html#promptcost",
+    "label": "What does one AI prompt cost?"
+   }
+  ]
+ },
+ {
+  "id": "stanford-ai-k12-review-2026",
+  "week": "2026-11-15",
+  "side": "both",
+  "date": "2026-11-10",
+  "title": "Stanford review of AI in schools: some AI tutors help, some hurt, many make no difference",
+  "summary": "Stanford's SCALE initiative reviewed new studies of AI in K-12 education that can show cause and effect, such as randomized trials. The results are mixed: one guided tutor raised math scores, while other studies found AI slowed practice, lowered motivation, or lowered performance once students worked without it.",
+  "numbers": [
+   "32 new causal studies, bringing the total reviewed to 52; 28 of the new ones are about student-facing AI (<a href=\"https://scale.stanford.edu/ai/evidence-base-review/evidence-base-ai-k12-november-review\" target=\"_blank\" rel=\"noopener\">Stanford SCALE, Nov 10, 2026</a>).",
+   "Sierra Leone: a randomized trial with 1,423 students in grades 7 and 8 found a math gain of 0.258 standard deviations from a guided AI tutor (<a href=\"https://scale.stanford.edu/ai/evidence-base-review/evidence-base-ai-k12-november-review\" target=\"_blank\" rel=\"noopener\">Stanford SCALE, Nov 10, 2026</a>).",
+   "United States: a randomized trial with 6,997 students in grades 6 to 8 found the AI tutor slowed practice and gave no overall gain on a later test (<a href=\"https://scale.stanford.edu/ai/evidence-base-review/evidence-base-ai-k12-november-review\" target=\"_blank\" rel=\"noopener\">Stanford SCALE, Nov 10, 2026</a>).",
+   "A study of 3.2 million practice interactions found the odds of a correct answer fell about 25% on proctored items, where AI was not available (<a href=\"https://scale.stanford.edu/ai/evidence-base-review/evidence-base-ai-k12-november-review\" target=\"_blank\" rel=\"noopener\">Stanford SCALE, Nov 10, 2026</a>).",
+   "Turkey: a study with 193 teachers and 2,816 students found lower student motivation and confidence, with no average change in scores (<a href=\"https://scale.stanford.edu/ai/evidence-base-review/evidence-base-ai-k12-november-review\" target=\"_blank\" rel=\"noopener\">Stanford SCALE, Nov 10, 2026</a>)."
+  ],
+  "concept": {
+   "title": "Effect sizes and odds",
+   "html": "An <b>effect size</b> in standard deviations (SD) says how far the average student moved compared with the spread of scores. On a bell curve, moving up 0.258 SD takes a student at the 50th percentile to about the 60th. <b>Odds</b> are not the same as probability: odds = p &divide; (1 &minus; p). A 75% chance is odds of 3 to 1. \"Odds fell 25%\" means multiply the odds by 0.75, then convert back with p = odds &divide; (1 + odds)."
+  },
+  "hook": {
+   "prompt": "Use the review's numbers.",
+   "parts": [
+    {
+     "label": "(a) A student at the 50th percentile gains 0.258 SD. About what percentile is that? (Use a normal table or calculator.)",
+     "answer": 60.2,
+     "tol": 0.5,
+     "unit": "percentile"
+    },
+    {
+     "label": "(b) A student gets 75% of practice items right. If the odds of a correct answer fall 25%, what is the new chance of a correct answer?",
+     "answer": 69.2,
+     "tol": 0.3,
+     "unit": "%"
+    }
+   ],
+   "worked": "(a) The area under the standard normal curve to the left of z = 0.258 is 0.602, so about the <b>60th percentile</b>. (b) Odds at 75%: 0.75 &divide; 0.25 = 3. Fall 25%: 3 &times; 0.75 = 2.25. New chance: 2.25 &divide; 3.25 = 0.692, about <b>69.2%</b>. A 25% drop in odds is not a 25% drop in the chance of being right."
+  },
+  "hides": "Different tutors, subjects, ages and countries are being compared, so \"AI tutors\" is not one thing. The design matters: a tutor that gives hints may help, while one that gives answers may hurt learning that shows up later. Several studies are small, and some may still be working papers. Most studies did not report standardized effect sizes.",
+  "evidence": "Moderate: a university review of causal studies, which are stronger than surveys, but the quality of each study varies and peer-review status was not checked one by one. About 80% of the long review was read.",
+  "investigate": "Open the <a href=\"https://scale.stanford.edu/ai/evidence-base-review/evidence-base-ai-k12-november-review\" target=\"_blank\" rel=\"noopener\">Stanford review</a> and pick one study. Write down: how many students, how they were split into groups, what the AI did, and what was measured. Would you trust its result? Why?",
+  "ask": [
+   "Varies by tool; for most commercial tutors, not public.",
+   "Test scores, later tests and proctored items, depending on the study.",
+   "Mostly no for the tutors themselves; the study designs are public.",
+   "Varies: in some studies teachers were present or approved the AI's messages.",
+   "Students lose learning time; schools pay for the tools.",
+   "Not applicable.",
+   "From dozens of students to tens of thousands per study; national use was not counted."
+  ],
+  "related": [
+   {
+    "href": "index.html#learnwith",
+    "label": "Learn with AI, not from it"
+   },
+   {
+    "href": "index.html#frontier",
+    "label": "The jagged frontier"
+   }
+  ]
+ },
 {
  id:'masai-mammography', week:'2026-11-11', group:'Start here: cases to know', side:'good', date:'2025-02-04', dateLabel:'February 2025',
  title:'AI helped radiologists find 29% more breast cancers in a Swedish trial',
